@@ -6,7 +6,6 @@
 // ──────────────────────────────────────────────────
 //  INTERFACES & TYPES
 // ──────────────────────────────────────────────────
-
 interface ImageEntry {
   file: File;
   dataUrl: string;
