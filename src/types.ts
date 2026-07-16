@@ -5,7 +5,19 @@ export interface ImageEntry {
   mimeType?: string;
 }
 
+export interface UploadedFile {
+  id: string;
+  name: string;
+  path?: string; // Relative path inside folder if uploaded as a directory
+  dataUrl: string; // Base64 encoding
+  mimeType: string;
+  size: number;
+  category: string; // 'Leaves' | 'Pods' | 'Seeds / Beans' | 'Bark / Stems' | 'Document' | 'Video' | 'Folder'
+}
+
 export interface AnalysisResult {
+  isCocoa?: boolean;
+  objectType?: string;
   ripenessLabel: string;
   ripenessScore: number;
   weeksToHarvest: string;
@@ -21,6 +33,7 @@ export interface AnalysisResult {
 
 export interface AppState {
   images: ImageEntry[];
+  uploadedFiles: UploadedFile[];
   audioBlob: Blob | null;
   audioName: string;
   recording: boolean;
