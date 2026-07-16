@@ -29,18 +29,18 @@ app.use((req, res, next) => {
 // Middleware for parsing JSON with a larger limit for images
 app.use(express.json({ limit: '50mb' }));
 
-if (!process.env.GEMINI_API_KEY) {
-  console.error('CRITICAL: GEMINI_API_KEY is not set in environment variables.');
-}
-
-const defaultAi = new GoogleGenAI({
+const defaultAi = process.env.GEMINI_API_KEY ? new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
   httpOptions: {
     headers: {
       'User-Agent': 'aistudio-build',
     }
   }
-});
+}) : null;
+
+if (!defaultAi) {
+  console.warn('GEMINI_API_KEY not set; Gemini Live API is disabled on this server.');
+}
 
 const SYSTEM_PROMPT = `You are CacaoLens, an expert agricultural advisor specialising in Theobroma cacao (cocoa) cultivation. Your role is to analyse observations about cocoa plants — from text descriptions, images, and video clips — and provide detailed, actionable analysis for farmers.
 
@@ -108,6 +108,10 @@ const JSON_SCHEMA = {
 app.post('/api/analyse', async (req, res) => {
   try {
     const { text, images, audio, files, apiKey, provider = 'gemini' } = req.body;
+    // Allow API key via Authorization header: "Authorization: Bearer <KEY>"
+    const authHeader = (req.headers.authorization || req.headers.Authorization) as string | undefined;
+    const headerApiKey = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+    const providedApiKey = apiKey || headerApiKey;
 
     let promptText = `Farmer's observation: ${text || '(No text provided)'}\n\nPlease analyse the cocoa plant based on the provided information, images, video, audio, files or folder structures.`;
     
@@ -126,9 +130,9 @@ app.post('/api/analyse', async (req, res) => {
     let resultJson: any = null;
 
     if (provider === 'gemini') {
-      const activeApiKey = apiKey || process.env.GEMINI_API_KEY;
-      if (!activeApiKey) throw new Error('Gemini API key is not configured.');
-      
+      const activeApiKey = providedApiKey || process.env.GEMINI_API_KEY;
+      if (!activeApiKey) throw new Error('Gemini API key is not configured. Provide one in the request body or Authorization header, or set GEMINI_API_KEY on the server.');
+
       const ai = new GoogleGenAI({ apiKey: activeApiKey });
       const parts: any[] = [{ text: promptText }];
 
@@ -173,12 +177,13 @@ app.post('/api/analyse', async (req, res) => {
       resultJson = JSON.parse(response.text || '{}');
       
     } else if (provider === 'openai' || provider === 'meta') {
-      if (!apiKey) throw new Error(`${provider} API key is required.`);
+      const activeApiKey = providedApiKey;
+      if (!activeApiKey) throw new Error(`${provider} API key is required. Provide it in the request body or the Authorization header.`);
       
       const baseURL = provider === 'meta' ? 'https://api.groq.com/openai/v1' : undefined;
       const model = provider === 'meta' ? 'llama-3.3-70b-versatile' : 'gpt-4o';
       
-      const openai = new OpenAI({ apiKey, baseURL });
+      const openai = new OpenAI({ apiKey: activeApiKey, baseURL });
       const contentParts: any[] = [{ type: 'text', text: promptText }];
       
       if (images && Array.isArray(images)) {
@@ -214,9 +219,10 @@ app.post('/api/analyse', async (req, res) => {
       resultJson = JSON.parse(response.choices[0].message.content || '{}');
       
     } else if (provider === 'anthropic') {
-      if (!apiKey) throw new Error('Anthropic API key is required.');
-      
-      const anthropic = new Anthropic({ apiKey });
+      const activeApiKey = providedApiKey;
+      if (!activeApiKey) throw new Error('Anthropic API key is required. Provide it in the request body or the Authorization header.');
+
+      const anthropic = new Anthropic({ apiKey: activeApiKey });
       const contentParts: any[] = [{ type: 'text', text: promptText }];
       
       if (images && Array.isArray(images)) {
@@ -294,6 +300,11 @@ async function startServer() {
 
   wss.on('connection', async (clientWs) => {
     try {
+      if (!defaultAi) {
+        clientWs.send(JSON.stringify({ error: 'Live API unavailable: GEMINI_API_KEY not set on server.' }));
+        clientWs.close();
+        return;
+      }
       const session = await defaultAi.live.connect({
         model: 'gemini-3.1-flash-live-preview',
         config: {

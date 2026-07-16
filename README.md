@@ -77,6 +77,35 @@ Vision inference example (base64 image):
 
 ```json
 { "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ..." }
+
+Passing API keys
+----------------
+
+You can provide API keys for external models in two ways:
+
+- Request body: include `apiKey` in the JSON body of `/api/analyse` (or provider-specific endpoints).
+- Authorization header: include `Authorization: Bearer <YOUR_KEY>` in the request headers.
+
+Examples:
+
+```bash
+# Using Authorization header (recommended over query strings):
+curl -X POST http://localhost:3000/api/analyse \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_OPENAI_API_KEY" \
+  -d '{"provider":"openai","text":"Check this cocoa leaf"}'
+```
+
+```bash
+# Or include the key in the request body (less secure when not using HTTPS):
+curl -X POST http://localhost:3000/api/analyse \
+  -H "Content-Type: application/json" \
+  -d '{"provider":"anthropic","apiKey":"YOUR_KEY","text":"Example"}'
+```
+
+Notes:
+- If you do not set `GEMINI_API_KEY` in the server environment, Gemini Live features will be disabled. For single requests to Gemini you may still provide a `apiKey` in the request.
+- Never commit API keys to source control. Prefer setting them in environment variables on production hosts or using per-request Authorization headers.
 ```
 
 Development notes and next steps
