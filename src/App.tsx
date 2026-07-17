@@ -1658,7 +1658,8 @@ export default function App() {
                       { id: 'gemini', label: 'Google Gemini' },
                       { id: 'openai', label: 'ChatGPT (OpenAI)' },
                       { id: 'anthropic', label: 'Claude (Anthropic)' },
-                      { id: 'meta', label: 'Meta AI (Groq)' }
+                      { id: 'meta', label: 'Meta AI (Groq)' },
+                      { id: 'local', label: 'Local Model (offline)' }
                     ].map(p => (
                       <button
                         key={p.id}
@@ -1678,27 +1679,35 @@ export default function App() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-2 uppercase tracking-wide">
-                    {aiProvider.charAt(0).toUpperCase() + aiProvider.slice(1)} API Key
-                  </label>
-                  <input 
-                    type="password"
-                    placeholder={`Enter your ${aiProvider} API key...`}
-                    value={apiKeys[aiProvider] || ''}
-                    onChange={(e) => {
-                      const newKeys = { ...apiKeys, [aiProvider]: e.target.value };
-                      setApiKeys(newKeys);
-                      localStorage.setItem('cacaolens_keys', JSON.stringify(newKeys));
-                    }}
-                    className="w-full bg-brand-bg border border-card-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent-indigo/30 focus:border-accent-indigo transition-all"
-                  />
-                  <p className="text-[10px] text-stone-500 mt-2">
-                    {aiProvider === 'gemini' 
-                      ? "If left blank, the app will attempt to use the system default key." 
-                      : `Your key is stored locally in your browser and sent securely to the proxy server.`}
-                  </p>
-                </div>
+                {aiProvider !== 'local' ? (
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-2 uppercase tracking-wide">
+                      {aiProvider.charAt(0).toUpperCase() + aiProvider.slice(1)} API Key
+                    </label>
+                    <input 
+                      type="password"
+                      placeholder={`Enter your ${aiProvider} API key...`}
+                      value={apiKeys[aiProvider] || ''}
+                      onChange={(e) => {
+                        const newKeys = { ...apiKeys, [aiProvider]: e.target.value };
+                        setApiKeys(newKeys);
+                        localStorage.setItem('cacaolens_keys', JSON.stringify(newKeys));
+                      }}
+                      className="w-full bg-brand-bg border border-card-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent-indigo/30 focus:border-accent-indigo transition-all"
+                    />
+                    <p className="text-[10px] text-stone-500 mt-2">
+                      {aiProvider === 'gemini' 
+                        ? "If left blank, the app will attempt to use the system default key." 
+                        : `Your key is stored locally in your browser and sent securely to the proxy server.`}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-accent-indigo/5 border border-accent-indigo/10 rounded-xl p-4">
+                    <p className="text-xs text-stone-600">
+                      Using the locally trained CocoaNet model. Make sure the Python ML service is running (<code className="text-accent-indigo font-mono text-[10px]">npm run start-python</code>). No API key needed.
+                    </p>
+                  </div>
+                )}
               </div>
               
               <div className="px-6 py-4 bg-brand-bg/50 border-t border-card-border flex justify-end">
