@@ -1,0 +1,6 @@
+{
+  "name": "CacaoLens",
+  "description": "Premium AI-powered cocoa pod analysis and harvest advisory tool.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
