@@ -188,9 +188,9 @@ def generate_dataset(out_dir: str, train_per_class: int = 80, val_per_class: int
             img = gen_fn(size)
             img.save(val_dir / f'{cls_name.lower()}_{i:04d}.jpg', 'JPEG', quality=90)
 
-        print(f"  ✓ {cls_name}: {train_per_class} train + {val_per_class} val")
+        print(f"  [OK] {cls_name}: {train_per_class} train + {val_per_class} val")
 
-    print(f"\nDataset generation complete! → {out}")
+    print(f"\nDataset generation complete! -> {out}")
 
 
 if __name__ == '__main__':

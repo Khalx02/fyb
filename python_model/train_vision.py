@@ -204,7 +204,7 @@ def main():
                 'best_val_acc': best_acc,
                 'epoch': epoch,
             }, args.out)
-            print(f'  ✓ Saved best model to {args.out} (val_acc={best_acc:.4f})')
+            print(f'  [OK] Saved best model to {args.out} (val_acc={best_acc:.4f})')
         else:
             epochs_no_improve += 1
 

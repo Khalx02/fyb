@@ -170,10 +170,25 @@ def predict():
                     out = model_tf(x)
                     probs = torch.nn.functional.softmax(out, dim=1).tolist()[0]
                     pred_idx = int(torch.argmax(out, dim=1).item())
+                    pred_class = classes[pred_idx]
+                    conf = round(probs[pred_idx], 4)
+                    
+                    # Construct a full frontend-compatible AnalysisResult schema
+                    # from the basic classification result
                     return jsonify({
-                        'prediction': classes[pred_idx],
-                        'confidence': round(probs[pred_idx], 4),
-                        'probabilities': {cls: round(p, 4) for cls, p in zip(classes, probs)},
+                        "isCocoa": True,
+                        "objectType": pred_class,
+                        "ripenessLabel": "Analyzed via Local Model",
+                        "ripenessScore": int(conf * 100),
+                        "weeksToHarvest": "N/A (Vision Model Only)",
+                        "estimatedAgeWeeks": "N/A",
+                        "bestHarvestWindow": "Check manually based on color",
+                        "podYieldEstimate": "N/A",
+                        "characteristics": f"The local CocoaNet vision model recognized this as '{pred_class}' with {conf*100:.1f}% confidence.",
+                        "harvestRecommendations": ["Consult with local agronomist for specific guidance."],
+                        "risks": ["Model is early in training, use as a general guide."],
+                        "nextSteps": ["Continue regular field monitoring."],
+                        "gaugeColor": "#6366f1" if pred_class == "Pod" else "#22c55e"
                     })
             else:
                 return jsonify({'error': 'Torch model not found. Train with train_vision.py to create model.pth'}), 500
