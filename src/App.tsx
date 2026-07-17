@@ -86,39 +86,6 @@ export default function App() {
     anthropic: '',
     meta: ''
   });
-  const [keyValidationStatus, setKeyValidationStatus] = useState<Record<string, 'idle' | 'valid' | 'invalid' | 'testing'>>({
-    gemini: 'idle', openai: 'idle', anthropic: 'idle', meta: 'idle'
-  });
-  const [keyValidationMessage, setKeyValidationMessage] = useState<Record<string, string>>({});
-
-  const testApiKey = async (provider: string) => {
-    const key = apiKeys[provider];
-    if (!key && provider !== 'gemini') {
-      setKeyValidationStatus(prev => ({ ...prev, [provider]: 'invalid' }));
-      setKeyValidationMessage(prev => ({ ...prev, [provider]: 'Please enter an API key first.' }));
-      return;
-    }
-    setKeyValidationStatus(prev => ({ ...prev, [provider]: 'testing' }));
-    setKeyValidationMessage(prev => ({ ...prev, [provider]: '' }));
-    try {
-      const response = await fetch('/api/validate-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, apiKey: key || undefined }),
-      });
-      const result = await response.json();
-      if (result.valid) {
-        setKeyValidationStatus(prev => ({ ...prev, [provider]: 'valid' }));
-        setKeyValidationMessage(prev => ({ ...prev, [provider]: result.message || 'Key is valid!' }));
-      } else {
-        setKeyValidationStatus(prev => ({ ...prev, [provider]: 'invalid' }));
-        setKeyValidationMessage(prev => ({ ...prev, [provider]: result.error || 'Key validation failed.' }));
-      }
-    } catch (err: any) {
-      setKeyValidationStatus(prev => ({ ...prev, [provider]: 'invalid' }));
-      setKeyValidationMessage(prev => ({ ...prev, [provider]: 'Network error — is the server running?' }));
-    }
-  };
 
   useEffect(() => {
     try {
@@ -609,7 +576,7 @@ export default function App() {
           <div className="flex items-center gap-3 shrink-0">
             <button 
               onClick={() => setIsSettingsOpen(true)}
-              className="p-1.5 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-full transition-colors"
+              className="p-1.5 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-full transition-colors hidden lg:block"
               title="Settings"
             >
               <Settings className="w-4 h-4" />
@@ -1688,10 +1655,10 @@ export default function App() {
                   <label className="block text-xs font-bold text-stone-700 mb-2 uppercase tracking-wide">Select AI Provider</label>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { id: 'gemini', label: 'Google Gemini', hint: 'AIza...' },
-                      { id: 'openai', label: 'ChatGPT (OpenAI)', hint: 'sk-...' },
-                      { id: 'anthropic', label: 'Claude (Anthropic)', hint: 'sk-ant-...' },
-                      { id: 'meta', label: 'Meta AI (Groq)', hint: 'gsk_...' }
+                      { id: 'gemini', label: 'Google Gemini' },
+                      { id: 'openai', label: 'ChatGPT (OpenAI)' },
+                      { id: 'anthropic', label: 'Claude (Anthropic)' },
+                      { id: 'meta', label: 'Meta AI (Groq)' }
                     ].map(p => (
                       <button
                         key={p.id}
@@ -1699,22 +1666,13 @@ export default function App() {
                           setAiProvider(p.id);
                           localStorage.setItem('cacaolens_provider', p.id);
                         }}
-                        className={`py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all duration-200 relative ${
+                        className={`py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all duration-200 ${
                           aiProvider === p.id 
                             ? 'bg-accent-indigo/10 border-accent-indigo text-accent-indigo ring-1 ring-accent-indigo/20' 
                             : 'bg-white border-card-border text-stone-600 hover:border-stone-300'
                         }`}
                       >
-                        <span className="flex items-center justify-center gap-1.5">
-                          {apiKeys[p.id] && (
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                              keyValidationStatus[p.id] === 'valid' ? 'bg-green-500' :
-                              keyValidationStatus[p.id] === 'invalid' ? 'bg-red-500' :
-                              'bg-amber-400'
-                            }`} />
-                          )}
-                          {p.label}
-                        </span>
+                        {p.label}
                       </button>
                     ))}
                   </div>
@@ -1722,90 +1680,23 @@ export default function App() {
 
                 <div>
                   <label className="block text-xs font-bold text-stone-700 mb-2 uppercase tracking-wide">
-                    {aiProvider === 'gemini' ? 'Google Gemini' : aiProvider === 'openai' ? 'OpenAI' : aiProvider === 'anthropic' ? 'Anthropic' : 'Groq (Meta)'} API Key
+                    {aiProvider.charAt(0).toUpperCase() + aiProvider.slice(1)} API Key
                   </label>
-                  <div className="relative">
-                    <input 
-                      type="password"
-                      placeholder={(() => {
-                        const hints: Record<string, string> = {
-                          gemini: 'AIzaSy... (leave blank for server default)',
-                          openai: 'sk-proj-...',
-                          anthropic: 'sk-ant-api03-...',
-                          meta: 'gsk_...'
-                        };
-                        return hints[aiProvider] || 'Enter API key...';
-                      })()}
-                      value={apiKeys[aiProvider] || ''}
-                      onChange={(e) => {
-                        const newKeys = { ...apiKeys, [aiProvider]: e.target.value };
-                        setApiKeys(newKeys);
-                        localStorage.setItem('cacaolens_keys', JSON.stringify(newKeys));
-                        setKeyValidationStatus(prev => ({ ...prev, [aiProvider]: 'idle' }));
-                        setKeyValidationMessage(prev => ({ ...prev, [aiProvider]: '' }));
-                      }}
-                      className={`w-full bg-brand-bg border rounded-xl px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-accent-indigo/30 focus:border-accent-indigo transition-all ${
-                        keyValidationStatus[aiProvider] === 'valid' ? 'border-green-400' :
-                        keyValidationStatus[aiProvider] === 'invalid' ? 'border-red-400' :
-                        'border-card-border'
-                      }`}
-                    />
-                    {apiKeys[aiProvider] && keyValidationStatus[aiProvider] !== 'idle' && keyValidationStatus[aiProvider] !== 'testing' && (
-                      <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${
-                        keyValidationStatus[aiProvider] === 'valid' ? 'text-green-500' : 'text-red-500'
-                      }`}>
-                        {keyValidationStatus[aiProvider] === 'valid' ? '\u2713' : '\u2717'}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Test Key Button */}
-                  <div className="flex items-center gap-3 mt-3">
-                    <button
-                      onClick={() => testApiKey(aiProvider)}
-                      disabled={keyValidationStatus[aiProvider] === 'testing'}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${
-                        keyValidationStatus[aiProvider] === 'testing'
-                          ? 'bg-stone-200 text-stone-400 cursor-wait'
-                          : keyValidationStatus[aiProvider] === 'valid'
-                            ? 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-100'
-                            : keyValidationStatus[aiProvider] === 'invalid'
-                              ? 'bg-red-50 border border-red-200 text-red-700 hover:bg-red-100'
-                              : 'bg-accent-indigo/10 border border-accent-indigo/20 text-accent-indigo hover:bg-accent-indigo/20'
-                      }`}
-                    >
-                      {keyValidationStatus[aiProvider] === 'testing' ? (
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-3 h-3 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
-                          Testing...
-                        </span>
-                      ) : keyValidationStatus[aiProvider] === 'valid' ? (
-                        <span className="flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Key Valid
-                        </span>
-                      ) : keyValidationStatus[aiProvider] === 'invalid' ? (
-                        <span className="flex items-center gap-1.5">
-                          <AlertTriangle className="w-3.5 h-3.5" />
-                          Retry Test
-                        </span>
-                      ) : (
-                        'Test Key'
-                      )}
-                    </button>
-                    {keyValidationMessage[aiProvider] && (
-                      <span className={`text-[10px] flex-1 ${
-                        keyValidationStatus[aiProvider] === 'valid' ? 'text-green-600' : 'text-red-500'
-                      }`}>
-                        {keyValidationMessage[aiProvider]}
-                      </span>
-                    )}
-                  </div>
-
+                  <input 
+                    type="password"
+                    placeholder={`Enter your ${aiProvider} API key...`}
+                    value={apiKeys[aiProvider] || ''}
+                    onChange={(e) => {
+                      const newKeys = { ...apiKeys, [aiProvider]: e.target.value };
+                      setApiKeys(newKeys);
+                      localStorage.setItem('cacaolens_keys', JSON.stringify(newKeys));
+                    }}
+                    className="w-full bg-brand-bg border border-card-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent-indigo/30 focus:border-accent-indigo transition-all"
+                  />
                   <p className="text-[10px] text-stone-500 mt-2">
                     {aiProvider === 'gemini' 
-                      ? "If left blank, the app will attempt to use the server's default Gemini key." 
-                      : `Your key is stored only in your browser's local storage and sent securely per-request.`}
+                      ? "If left blank, the app will attempt to use the system default key." 
+                      : `Your key is stored locally in your browser and sent securely to the proxy server.`}
                   </p>
                 </div>
               </div>

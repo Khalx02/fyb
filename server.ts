@@ -105,105 +105,13 @@ const JSON_SCHEMA = {
   ]
 };
 
-// Helper: mask an API key for safe logging
-function maskKey(key: string | undefined): string {
-  if (!key) return '(none)';
-  if (key.length <= 8) return '***';
-  return key.slice(0, 4) + '...' + key.slice(-4);
-}
-
-// Helper: extract API key from request body or Authorization header
-function extractApiKey(req: express.Request): string | undefined {
-  const { apiKey } = req.body || {};
-  const authHeader = (req.headers.authorization || req.headers.Authorization) as string | undefined;
-  const headerApiKey = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
-  return apiKey || headerApiKey;
-}
-
-// ─── API Key Validation Endpoint ────────────────────────────────────────────
-
-app.post('/api/validate-key', async (req, res) => {
-  try {
-    const { provider = 'gemini' } = req.body;
-    const providedApiKey = extractApiKey(req);
-
-    if (!providedApiKey && provider !== 'gemini') {
-      return res.status(400).json({ valid: false, error: `No API key provided for ${provider}.` });
-    }
-
-    if (provider === 'gemini') {
-      const activeKey = providedApiKey || process.env.GEMINI_API_KEY;
-      if (!activeKey) {
-        return res.status(400).json({ valid: false, error: 'No Gemini API key provided or configured on the server.' });
-      }
-      try {
-        const ai = new GoogleGenAI({ apiKey: activeKey });
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.5-flash',
-          contents: 'Respond with exactly: OK',
-          config: { maxOutputTokens: 10 }
-        });
-        return res.json({ valid: true, provider: 'gemini', message: 'Gemini API key is valid.' });
-      } catch (e: any) {
-        return res.status(401).json({ valid: false, provider: 'gemini', error: `Gemini key validation failed: ${e.message}` });
-      }
-
-    } else if (provider === 'openai') {
-      try {
-        const openai = new OpenAI({ apiKey: providedApiKey });
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: 'Respond with exactly: OK' }],
-          max_tokens: 5,
-        });
-        return res.json({ valid: true, provider: 'openai', message: 'OpenAI API key is valid.' });
-      } catch (e: any) {
-        return res.status(401).json({ valid: false, provider: 'openai', error: `OpenAI key validation failed: ${e.message}` });
-      }
-
-    } else if (provider === 'anthropic') {
-      try {
-        const anthropic = new Anthropic({ apiKey: providedApiKey });
-        const response = await anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 10,
-          messages: [{ role: 'user', content: 'Respond with exactly: OK' }],
-        });
-        return res.json({ valid: true, provider: 'anthropic', message: 'Anthropic API key is valid.' });
-      } catch (e: any) {
-        return res.status(401).json({ valid: false, provider: 'anthropic', error: `Anthropic key validation failed: ${e.message}` });
-      }
-
-    } else if (provider === 'meta') {
-      try {
-        const openai = new OpenAI({ apiKey: providedApiKey, baseURL: 'https://api.groq.com/openai/v1' });
-        const response = await openai.chat.completions.create({
-          model: 'llama-3.3-70b-versatile',
-          messages: [{ role: 'user', content: 'Respond with exactly: OK' }],
-          max_tokens: 5,
-        });
-        return res.json({ valid: true, provider: 'meta', message: 'Groq/Meta API key is valid.' });
-      } catch (e: any) {
-        return res.status(401).json({ valid: false, provider: 'meta', error: `Groq/Meta key validation failed: ${e.message}` });
-      }
-
-    } else {
-      return res.status(400).json({ valid: false, error: `Unsupported provider: ${provider}` });
-    }
-  } catch (error: any) {
-    console.error('Key validation error:', error.message);
-    res.status(500).json({ valid: false, error: 'Internal server error during key validation.' });
-  }
-});
-
-// ─── Main Analysis Endpoint ─────────────────────────────────────────────────
-
 app.post('/api/analyse', async (req, res) => {
   try {
-    const { text, images, audio, files, provider = 'gemini' } = req.body;
-    const providedApiKey = extractApiKey(req);
-
-    console.log(`[analyse] provider=${provider} key=${maskKey(providedApiKey)} text_len=${(text || '').length} images=${images?.length || 0} files=${files?.length || 0}`);
+    const { text, images, audio, files, apiKey, provider = 'gemini' } = req.body;
+    // Allow API key via Authorization header: "Authorization: Bearer <KEY>"
+    const authHeader = (req.headers.authorization || req.headers.Authorization) as string | undefined;
+    const headerApiKey = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+    const providedApiKey = apiKey || headerApiKey;
 
     let promptText = `Farmer's observation: ${text || '(No text provided)'}\n\nPlease analyse the cocoa plant based on the provided information, images, video, audio, files or folder structures.`;
     
@@ -223,7 +131,7 @@ app.post('/api/analyse', async (req, res) => {
 
     if (provider === 'gemini') {
       const activeApiKey = providedApiKey || process.env.GEMINI_API_KEY;
-      if (!activeApiKey) throw new Error('Gemini API key is not configured. Go to Settings (⚙️) to enter your Gemini API key, or set GEMINI_API_KEY on the server.');
+      if (!activeApiKey) throw new Error('Gemini API key is not configured. Provide one in the request body or Authorization header, or set GEMINI_API_KEY on the server.');
 
       const ai = new GoogleGenAI({ apiKey: activeApiKey });
       const parts: any[] = [{ text: promptText }];
@@ -270,7 +178,7 @@ app.post('/api/analyse', async (req, res) => {
       
     } else if (provider === 'openai' || provider === 'meta') {
       const activeApiKey = providedApiKey;
-      if (!activeApiKey) throw new Error(`${provider === 'openai' ? 'OpenAI' : 'Groq/Meta'} API key is required. Go to Settings (⚙️) to enter your API key.`);
+      if (!activeApiKey) throw new Error(`${provider} API key is required. Provide it in the request body or the Authorization header.`);
       
       const baseURL = provider === 'meta' ? 'https://api.groq.com/openai/v1' : undefined;
       const model = provider === 'meta' ? 'llama-3.3-70b-versatile' : 'gpt-4o';
@@ -312,7 +220,7 @@ app.post('/api/analyse', async (req, res) => {
       
     } else if (provider === 'anthropic') {
       const activeApiKey = providedApiKey;
-      if (!activeApiKey) throw new Error('Anthropic API key is required. Go to Settings (⚙️) to enter your Claude API key.');
+      if (!activeApiKey) throw new Error('Anthropic API key is required. Provide it in the request body or the Authorization header.');
 
       const anthropic = new Anthropic({ apiKey: activeApiKey });
       const contentParts: any[] = [{ type: 'text', text: promptText }];
@@ -346,7 +254,7 @@ app.post('/api/analyse', async (req, res) => {
       }
 
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 1500,
         system: SYSTEM_PROMPT + "\n\nYou MUST respond with ONLY a valid JSON object matching this schema: " + JSON.stringify(JSON_SCHEMA) + "\nDo not include any markdown formatting like ```json or any other text.",
         messages: [{ role: 'user', content: contentParts }]
@@ -357,28 +265,13 @@ app.post('/api/analyse', async (req, res) => {
       resText = resText.replace(/```json\n?|\n?```/g, '').trim();
       resultJson = JSON.parse(resText);
     } else {
-      throw new Error(`Unsupported provider: ${provider}. Supported providers are: gemini, openai, anthropic, meta.`);
+      throw new Error(`Unsupported provider: ${provider}`);
     }
 
     res.json(resultJson);
   } catch (error: any) {
-    console.error('Analysis error:', error.message);
-    
-    // Return provider-specific error messages
-    let statusCode = 500;
-    let userMessage = error.message || 'Internal server error';
-
-    if (error.message?.includes('API key')) {
-      statusCode = 401;
-    } else if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
-      statusCode = 429;
-      userMessage = `Rate limit exceeded. Please wait a moment and try again. (${error.message})`;
-    } else if (error.message?.includes('not found') || error.message?.includes('does not exist')) {
-      statusCode = 404;
-      userMessage = `The requested AI model was not found. The provider may have updated their model names. (${error.message})`;
-    }
-
-    res.status(statusCode).json({ error: userMessage });
+    console.error('Analysis error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 });
 
@@ -395,23 +288,7 @@ app.post('/api/predict', async (req, res) => {
     res.status(response.status).json(data);
   } catch (err) {
     console.error('Predict proxy error:', err);
-    res.status(500).json({ error: 'Failed to call Python ML service. Make sure it is running (npm run start-python).' });
-  }
-});
-
-// Proxy endpoint to Python ML model info
-app.get('/api/model-info', async (req, res) => {
-  try {
-    const pythonUrl = process.env.PYTHON_ML_URL || 'http://localhost:5000';
-    const baseUrl = pythonUrl.replace(/\/predict$/, '');
-    const response = await fetch(`${baseUrl}/model-info`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (err) {
-    res.status(500).json({ error: 'Python ML service is not running.' });
+    res.status(500).json({ error: 'Failed to call Python ML service' });
   }
 });
 
@@ -512,3 +389,4 @@ async function startServer() {
 }
 
 startServer();
+

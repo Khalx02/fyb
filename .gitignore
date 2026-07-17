@@ -6,13 +6,3 @@ coverage/
 *.log
 .env*
 !.env.example
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-venv/
-.venv/
-env/
-python_model/cocoa_dataset/
-python_model/dataset_raw/

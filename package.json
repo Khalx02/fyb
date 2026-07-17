@@ -10,9 +10,6 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "train-model": "python3 python_model/train.py",
-    "generate-data": "python3 python_model/generate_synthetic_data.py",
-    "train-vision": "python3 python_model/train_vision.py --data python_model/cocoa_dataset --model cocoanet --epochs 10 --out python_model/model.pth",
-    "train-all": "npm run train-model && npm run generate-data && npm run train-vision",
     "start-python": "python3 python_model/app.py",
     "lint": "tsc --noEmit"
   },
