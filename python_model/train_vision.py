@@ -38,6 +38,11 @@ def build_model(num_classes, base='resnet50', pretrained=True):
         m = models.resnet50(pretrained=pretrained)
         in_f = m.fc.in_features
         m.fc = nn.Linear(in_f, num_classes)
+    elif base == 'cocoanet':
+        import sys
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from cocoa_net import CocoaNet
+        m = CocoaNet(num_classes=num_classes)
     else:
         m = models.resnet18(pretrained=pretrained)
         in_f = m.fc.in_features
@@ -71,8 +76,9 @@ def main():
     train_ds = datasets.ImageFolder(str(train_dir), transform=tfms['train'])
     val_ds = datasets.ImageFolder(str(val_dir), transform=tfms['val']) if val_dir.exists() else None
 
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=4) if val_ds else None
+    num_workers = 0 if os.name == 'nt' else 4
+    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=num_workers)
+    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=num_workers) if val_ds else None
 
     num_classes = len(train_ds.classes)
     print('Classes:', train_ds.classes)
