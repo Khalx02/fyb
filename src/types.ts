@@ -42,3 +42,23 @@ export interface AppState {
   result: AnalysisResult | null;
   error: string | null;
 }
+
+export interface ScanHistoryItem {
+  id: string;
+  timestamp: string;
+  text: string;
+  uploadedFiles: UploadedFile[];
+  audioName?: string;
+  result: AnalysisResult;
+}
+
+export type ThemeMode = 'dark' | 'light';
+
+export interface PresetPrompt {
+  id: string;
+  title: string;
+  subtitle: string;
+  prompt: string;
+  category: 'ripeness' | 'leaves' | 'seeds' | 'fungal';
+  icon: string;
+}
