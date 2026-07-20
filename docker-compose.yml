@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  cacaolens-app:
+    build: .
+    ports:
+      - "3000:3000"
+      - "5000:5000"
+    environment:
+      - PORT=3000
+      - PYTHON_ML_URL=http://localhost:5000/predict
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    restart: always

@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: cacaolens-node-app
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: PYTHON_ML_URL
+        fromService:
+          type: web
+          name: cacaolens-python-ml
+          property: url
+          suffix: /predict
+      - key: GEMINI_API_KEY
+        sync: false
+
+  - type: web
+    name: cacaolens-python-ml
+    env: python
+    buildCommand: pip install -r python_model/requirements.txt gunicorn
+    startCommand: gunicorn --bind 0.0.0.0:$PORT python_model.app:app
+    envVars:
+      - key: PYTHON_ML_PORT
+        value: 5000
