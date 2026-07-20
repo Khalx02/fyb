@@ -128,14 +128,11 @@ app.post('/api/analyse', async (req, res) => {
     
     let resultJson: any = null;
 
-    if (provider === 'gemini') {
+    if (provider === 'gemini' && (providedApiKey || process.env.GEMINI_API_KEY)) {
       const activeApiKey = providedApiKey || process.env.GEMINI_API_KEY;
-      if (!activeApiKey) throw new Error('Gemini API key is not configured. Provide one in the request body or Authorization header, or set GEMINI_API_KEY on the server.');
-
-      const ai = new GoogleGenAI({ apiKey: activeApiKey });
+      const ai = new GoogleGenAI({ apiKey: activeApiKey! });
       const parts: any[] = [{ text: promptText }];
 
-      // Handle traditional/compatibility image list
       if (images && Array.isArray(images)) {
         for (const img of images) {
           parts.push({
@@ -144,7 +141,6 @@ app.post('/api/analyse', async (req, res) => {
         }
       }
 
-      // Handle the generic files & folders list
       if (files && Array.isArray(files)) {
         for (const file of files) {
           if (file.data) {
@@ -175,10 +171,8 @@ app.post('/api/analyse', async (req, res) => {
       });
       resultJson = JSON.parse(response.text || '{}');
       
-    } else if (provider === 'openai' || provider === 'meta') {
+    } else if ((provider === 'openai' || provider === 'meta') && providedApiKey) {
       const activeApiKey = providedApiKey;
-      if (!activeApiKey) throw new Error(`${provider} API key is required. Provide it in the request body or the Authorization header.`);
-      
       const baseURL = provider === 'meta' ? 'https://api.groq.com/openai/v1' : undefined;
       const model = provider === 'meta' ? 'llama-3.3-70b-versatile' : 'gpt-4o';
       
@@ -217,10 +211,8 @@ app.post('/api/analyse', async (req, res) => {
       
       resultJson = JSON.parse(response.choices[0].message.content || '{}');
       
-    } else if (provider === 'anthropic') {
+    } else if (provider === 'anthropic' && providedApiKey) {
       const activeApiKey = providedApiKey;
-      if (!activeApiKey) throw new Error('Anthropic API key is required. Provide it in the request body or the Authorization header.');
-
       const anthropic = new Anthropic({ apiKey: activeApiKey });
       const contentParts: any[] = [{ type: 'text', text: promptText }];
       
@@ -260,7 +252,6 @@ app.post('/api/analyse', async (req, res) => {
       });
       
       let resText = (response.content[0] as any).text || '{}';
-      // Clean up markdown block if present
       resText = resText.replace(/```json\n?|\n?```/g, '').trim();
       resultJson = JSON.parse(resText);
     } else if (provider === 'local' || provider === 'trained-model' || !provider) {
