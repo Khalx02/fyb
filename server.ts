@@ -7,8 +7,8 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { WebSocketServer } from 'ws';
 import http from 'http';
-import dotenv from 'dotenv';
-import fetch from 'node-fetch';
+// Native global fetch in Node 18+
+const customFetch = (url: string | URL, init?: any) => (globalThis.fetch as any)(url, init);
 
 dotenv.config();
 
