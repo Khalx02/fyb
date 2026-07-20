@@ -195,21 +195,26 @@ export const ScanWorkspace: React.FC<ScanWorkspaceProps> = ({
           </div>
 
           {/* AI Provider selector */}
-          <div className="flex items-center gap-1.5 bg-input p-1 rounded-xl border border-card self-end sm:self-auto">
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider px-2">
-              Model:
+          <div className="flex items-center gap-1.5 bg-input p-1 rounded-xl border border-card self-end sm:self-auto overflow-x-auto">
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider px-2 whitespace-nowrap">
+              Engine:
             </span>
-            {['gemini', 'openai', 'anthropic'].map((prov) => (
+            {[
+              { id: 'local', label: 'Trained Model' },
+              { id: 'gemini', label: 'Gemini' },
+              { id: 'openai', label: 'OpenAI' },
+              { id: 'anthropic', label: 'Claude (Optional)' }
+            ].map((prov) => (
               <button
-                key={prov}
-                onClick={() => setAiProvider(prov)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase transition-all ${
-                  aiProvider === prov
-                    ? 'bg-emerald-500 text-white shadow-sm'
+                key={prov.id}
+                onClick={() => setAiProvider(prov.id)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  aiProvider === prov.id || (prov.id === 'local' && (aiProvider === 'trained-model' || !aiProvider))
+                    ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/20'
                     : 'text-stone-400 hover:text-stone-200'
                 }`}
               >
-                {prov}
+                {prov.label}
               </button>
             ))}
           </div>

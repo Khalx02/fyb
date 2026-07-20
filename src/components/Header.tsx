@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, Settings, Video, Menu, Sparkles } from 'lucide-react';
+import { Sun, Moon, Settings, Video, Menu, Cpu } from 'lucide-react';
 import { ThemeMode } from '../types';
 
 interface HeaderProps {
@@ -35,12 +35,12 @@ export const Header: React.FC<HeaderProps> = ({
             <h2 className="font-sans font-bold text-sm sm:text-base tracking-tight truncate">
               Welcome back, {farmerName}!
             </h2>
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Sparkles className="w-2.5 h-2.5" /> AI Ready
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-sm">
+              <Cpu className="w-3 h-3 text-emerald-400" /> Trained AI Active
             </span>
           </div>
           <p className="text-[11px] sm:text-xs text-stone-400 truncate">
-            Evaluate cocoa pod ripeness, leaf health, and harvest predictions in real time.
+            Real-time cocoa pod maturity, leaf health, and disease classification engine.
           </p>
         </div>
       </div>
@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
           <Video className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Live AI Assist</span>
+          <span className="hidden sm:inline">Live AI Scanner</span>
         </button>
 
         {/* Theme Toggle Button */}
@@ -76,7 +76,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onOpenSettings}
           className="p-2 rounded-xl border border-stone-700/50 hover:border-emerald-500/40 text-stone-300 hover:text-emerald-400 bg-stone-800/40 hover:bg-stone-800/80 transition-all duration-200"
-          title="AI Configuration & API Keys"
+          title="AI Model Configuration"
         >
           <Settings className="w-4 h-4" />
         </button>

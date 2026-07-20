@@ -74,14 +74,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Active Provider Selection */}
           <div>
             <label className="text-xs font-bold text-stone-300 uppercase tracking-wider block mb-2">
-              Default Inference Provider
+              Inference Engine (Default: Standalone Trained AI)
             </label>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { id: 'gemini', label: 'Google Gemini 2.5/3.5' },
-                { id: 'openai', label: 'OpenAI GPT-4o' },
-                { id: 'anthropic', label: 'Anthropic Claude 3.5' },
-                { id: 'meta', label: 'Meta Llama 3' }
+                { id: 'local', label: 'CacaoLens Trained Model (Offline / Default)' },
+                { id: 'gemini', label: 'Google Gemini (Optional)' },
+                { id: 'openai', label: 'OpenAI GPT-4o (Optional)' },
+                { id: 'anthropic', label: 'Anthropic Claude (Optional)' }
               ].map(prov => (
                 <button
                   key={prov.id}
@@ -89,8 +89,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     setAiProvider(prov.id);
                     localStorage.setItem('cacaolens_provider', prov.id);
                   }}
-                  className={`p-3 rounded-xl text-xs font-semibold text-left border transition-all ${
-                    aiProvider === prov.id
+                  className={`p-3 rounded-xl text-xs font-semibold text-left border transition-all cursor-pointer ${
+                    aiProvider === prov.id || (prov.id === 'local' && (aiProvider === 'trained-model' || !aiProvider))
                       ? 'bg-emerald-500/15 border-emerald-500 text-emerald-400 shadow-sm'
                       : 'bg-input border-card text-stone-300 hover:border-stone-600'
                   }`}

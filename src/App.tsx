@@ -37,7 +37,7 @@ export default function App() {
   const [isLiveCameraOpen, setIsLiveCameraOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [aiProvider, setAiProvider] = useState<string>('gemini');
+  const [aiProvider, setAiProvider] = useState<string>('local');
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({
     gemini: '',
     openai: '',

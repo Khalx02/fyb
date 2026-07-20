@@ -219,7 +219,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-3.5 border-t border-card bg-sidebar/50 flex items-center justify-between text-[11px] text-stone-400">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="capitalize">{aiProvider} Engine Active</span>
+            <span className="font-semibold text-stone-300">
+              {aiProvider === 'local' || aiProvider === 'trained-model' || !aiProvider ? 'Trained Vision AI (Active)' : `${aiProvider.toUpperCase()} Engine Active`}
+            </span>
           </div>
           <span className="font-mono text-[10px] text-stone-500">v2.4</span>
         </div>

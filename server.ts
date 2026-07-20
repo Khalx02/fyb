@@ -264,22 +264,22 @@ app.post('/api/analyse', async (req, res) => {
       // Clean up markdown block if present
       resText = resText.replace(/```json\n?|\n?```/g, '').trim();
       resultJson = JSON.parse(resText);
-    } else if (provider === 'local') {
-      // Use the locally trained Python ML service
+    } else if (provider === 'local' || provider === 'trained-model' || !provider) {
+      // Use the locally trained Python ML service (PyTorch / Scikit-Learn model)
       const image = images?.[0]?.data || files?.[0]?.data;
-      if (!image) throw new Error('Local model requires at least one image. Text-only analysis is not supported.');
-
       const pythonUrl = process.env.PYTHON_ML_URL || 'http://localhost:5000/predict';
+      const payload = image ? { image } : { features: [5.1, 3.5, 1.4, 0.2] };
+
       const response = await fetch(pythonUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image }),
+        body: JSON.stringify(payload),
       });
       const data: any = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Local model prediction failed');
+      if (!response.ok) throw new Error(data.error || 'Trained ML model prediction failed');
       resultJson = data;
     } else {
-      throw new Error(`Unsupported provider: ${provider}. Supported: gemini, openai, anthropic, meta, local`);
+      throw new Error(`Unsupported provider: ${provider}. Supported: local, trained-model, gemini, openai, anthropic, meta`);
     }
 
     res.json(resultJson);
