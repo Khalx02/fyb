@@ -1,11 +1,11 @@
 # Multi-stage Dockerfile for CacaoLens (Node.js + Python ML Service)
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
 # Install Node.js 20 and system build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     build-essential \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
@@ -27,7 +27,7 @@ COPY . .
 # Build Vite frontend and Express server bundle
 RUN npm run build
 
-# Expose Node server port
+# Expose Node server port and Python port
 EXPOSE 3000
 EXPOSE 5000
 
