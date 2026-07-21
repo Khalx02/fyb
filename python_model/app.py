@@ -234,5 +234,6 @@ def predict():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PYTHON_ML_PORT', 5000))
-    print(f'Starting CacaoLens Real ML Service on port {port}...')
-    app.run(host='0.0.0.0', port=port)
+    host = os.environ.get('PYTHON_ML_HOST', '127.0.0.1')
+    print(f'Starting CacaoLens Real ML Service on {host}:{port}...')
+    app.run(host=host, port=port)

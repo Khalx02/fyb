@@ -27,9 +27,8 @@ COPY . .
 # Build Vite frontend and Express server bundle
 RUN npm run build
 
-# Expose Node server port and Python port
+# Expose Node server port
 EXPOSE 3000
-EXPOSE 5000
 
-# Start Python ML service in background and Node server in foreground
+# Start Python ML service on 127.0.0.1 in background and Node server in foreground
 CMD python3 python_model/app.py & npm start
