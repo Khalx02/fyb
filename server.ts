@@ -257,23 +257,32 @@ app.post('/api/analyse', async (req, res) => {
     } else if (provider === 'local' || provider === 'trained-model' || !provider) {
       // Use the locally trained Python ML service (PyTorch / Scikit-Learn model)
       const image = images?.[0]?.data || files?.[0]?.data;
-      const pythonUrl = process.env.PYTHON_ML_URL || 'http://127.0.0.1:5000/predict';
+      const targetUrls = [
+        'http://127.0.0.1:5000/predict',
+        process.env.PYTHON_ML_URL
+      ].filter((u): u is string => Boolean(u));
       const payload = image ? { image } : { features: [5.1, 3.5, 1.4, 0.2] };
 
-      try {
-        const response = await fetch(pythonUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const responseText = await response.text();
-        if (response.ok && responseText) {
-          resultJson = JSON.parse(responseText);
-        } else {
-          throw new Error('Python ML service returned non-OK response');
+      let mlSuccess = false;
+      for (const url of targetUrls) {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const responseText = await response.text();
+          if (response.ok && responseText) {
+            resultJson = JSON.parse(responseText);
+            mlSuccess = true;
+            break;
+          }
+        } catch (err) {
+          console.warn(`Python ML fetch failed for ${url}:`, err);
         }
-      } catch (mlErr) {
-        console.warn('Python ML service fallback triggered:', mlErr);
+      }
+      if (!mlSuccess) {
+        console.warn('Python ML service fallback triggered');
         resultJson = {
           isCocoa: true,
           objectType: image ? "Cocoa Pod Evaluation" : "Agricultural Feature Assessment",

@@ -228,7 +228,7 @@ export const ScanWorkspace: React.FC<ScanWorkspaceProps> = ({
                 key={file.id}
                 className="relative group rounded-2xl overflow-hidden border border-card bg-stone-900/80 w-24 h-24 flex flex-col items-center justify-center shadow-md"
               >
-                {file.mimeType.startsWith('image/') ? (
+                {file.mimeType?.startsWith('image/') ? (
                   <img
                     src={file.dataUrl}
                     alt={file.name}

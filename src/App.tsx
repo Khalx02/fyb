@@ -365,12 +365,12 @@ export default function App() {
           provider: aiProvider,
           apiKey: apiKeys[aiProvider] || undefined,
           text: text + (state.audioName ? ` [Voice note attached: ${state.audioName}]` : ''),
-          files: state.uploadedFiles.map(f => ({
+          files: (state.uploadedFiles || []).map(f => ({
             name: f.name,
             path: f.path,
-            data: f.dataUrl.split(',')[1],
-            mimeType: f.mimeType,
-            size: f.size
+            data: f.dataUrl ? (f.dataUrl.includes(',') ? f.dataUrl.split(',')[1] : f.dataUrl) : '',
+            mimeType: f.mimeType || 'image/jpeg',
+            size: f.size || 0
           })),
           audio: audioPayload
         })
