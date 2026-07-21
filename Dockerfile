@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+ENV NODE_ENV=production
+
 # Copy Python dependencies and install
 COPY python_model/requirements.txt python_model/requirements.txt
 RUN pip install --no-cache-dir -r python_model/requirements.txt gunicorn
