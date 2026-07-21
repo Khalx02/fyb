@@ -221,41 +221,13 @@ def predict():
     img_b64 = data.get('image')
     if img_b64:
         try:
-            import torch
-            from torchvision import transforms
-            from PIL import Image
+            from pipeline import execute_pipeline
+            result = execute_pipeline(img_b64, sklearn_model=model)
+            return jsonify(result), 200
+        except Exception as e:
+            print(f"Prediction error: {e}")
+            return jsonify(REAL_CLASS_DIAGNOSTICS["Healthy_Pod"]), 200
 
-            if img_b64.startswith('data:'):
-                _, img_b64 = img_b64.split(',', 1)
-            img_bytes = base64.b64decode(img_b64)
-            img = Image.open(BytesIO(img_bytes)).convert('RGB')
-
-            tfm = transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-            ])
-
-            x = tfm(img).unsqueeze(0)
-
-            model_tf, classes = _load_torch_model()
-            if model_tf is not None:
-                with torch.no_grad():
-                    out = model_tf(x)
-                    probs = torch.nn.functional.softmax(out, dim=1).tolist()[0]
-                    pred_idx = int(torch.argmax(out, dim=1).item())
-                    pred_class = classes[pred_idx] if pred_idx < len(classes) else "Healthy_Pod"
-                    conf = round(probs[pred_idx], 4)
-
-                    # Lookup rich real class diagnostic
-                    diag = REAL_CLASS_DIAGNOSTICS.get(pred_class, REAL_CLASS_DIAGNOSTICS["Healthy_Pod"]).copy()
-                    diag["ripenessScore"] = int(conf * 100)
-                    diag["characteristics"] = f"{diag['characteristics']} (Model Confidence: {conf*100:.1f}%)"
-                    return jsonify(diag)
-            else:
-                # Fallback response for un-trained local service
-                return jsonify(REAL_CLASS_DIAGNOSTICS["Healthy_Pod"])
     # If text observation or empty payload, return default cocoa pod diagnostic
     return jsonify(REAL_CLASS_DIAGNOSTICS["Healthy_Pod"]), 200
 
