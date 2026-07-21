@@ -33,9 +33,14 @@ export const AnalysisResultsView: React.FC<AnalysisResultsViewProps> = ({
     );
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10';
-    if (score >= 50) return 'text-amber-400 border-amber-500/40 bg-amber-500/10';
+  const score = typeof result?.ripenessScore === 'number' ? result.ripenessScore : 90;
+  const recommendations = Array.isArray(result?.harvestRecommendations) ? result.harvestRecommendations : [];
+  const riskFactors = Array.isArray(result?.risks) ? result.risks : [];
+  const steps = Array.isArray(result?.nextSteps) ? result.nextSteps : [];
+
+  const getScoreColor = (scoreNum: number) => {
+    if (scoreNum >= 80) return 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10';
+    if (scoreNum >= 50) return 'text-amber-400 border-amber-500/40 bg-amber-500/10';
     return 'text-rose-400 border-rose-500/40 bg-rose-500/10';
   };
 
@@ -163,9 +168,9 @@ export const AnalysisResultsView: React.FC<AnalysisResultsViewProps> = ({
         {/* Tabs switcher */}
         <div className="flex items-center gap-2 border-b border-card pb-2 print:hidden">
           {[
-            { id: 'recommendations', label: 'Action Recommendations', count: result.harvestRecommendations?.length || 0, icon: CheckCircle2 },
-            { id: 'risks', label: 'Risk Factors & Pests', count: result.risks?.length || 0, icon: AlertTriangle },
-            { id: 'steps', label: 'Step-by-Step Care Guide', count: result.nextSteps?.length || 0, icon: FileText }
+            { id: 'recommendations', label: 'Action Recommendations', count: recommendations.length, icon: CheckCircle2 },
+            { id: 'risks', label: 'Risk Factors & Pests', count: riskFactors.length, icon: AlertTriangle },
+            { id: 'steps', label: 'Step-by-Step Care Guide', count: steps.length, icon: FileText }
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -192,7 +197,7 @@ export const AnalysisResultsView: React.FC<AnalysisResultsViewProps> = ({
         {/* Tab 1: Recommendations */}
         {activeTab === 'recommendations' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-fade-in">
-            {result.harvestRecommendations?.map((rec, idx) => (
+            {recommendations.map((rec, idx) => (
               <div
                 key={idx}
                 className="glass-card p-4 rounded-2xl flex items-start gap-3 border-l-4 border-l-emerald-400"
@@ -209,7 +214,7 @@ export const AnalysisResultsView: React.FC<AnalysisResultsViewProps> = ({
         {/* Tab 2: Risks */}
         {activeTab === 'risks' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-fade-in">
-            {result.risks?.map((risk, idx) => (
+            {riskFactors.map((risk, idx) => (
               <div
                 key={idx}
                 className="glass-card p-4 rounded-2xl flex items-start gap-3 border-l-4 border-l-amber-400 bg-amber-500/5"
@@ -226,7 +231,7 @@ export const AnalysisResultsView: React.FC<AnalysisResultsViewProps> = ({
         {/* Tab 3: Step Checklist */}
         {activeTab === 'steps' && (
           <div className="space-y-2.5 animate-fade-in">
-            {result.nextSteps?.map((step, idx) => {
+            {steps.map((step, idx) => {
               const isChecked = completedSteps.includes(idx);
               return (
                 <div

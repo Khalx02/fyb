@@ -11,6 +11,57 @@ import { LiveCamera } from './components/LiveCamera';
 
 const LOADING_TIPS_COUNT = 6;
 
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("React Error Boundary captured crash:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-stone-950 text-white p-6 text-center">
+          <div className="glass-card max-w-md p-6 rounded-3xl border border-rose-500/30 flex flex-col items-center gap-4">
+            <h3 className="text-lg font-bold text-rose-400">Diagnostic View Error</h3>
+            <p className="text-xs text-stone-300">
+              An unexpected render issue occurred while displaying analysis results.
+            </p>
+            <p className="text-[11px] text-stone-400 font-mono bg-stone-900 p-3 rounded-xl w-full text-left truncate">
+              {this.state.error?.message || "Unknown rendering exception"}
+            </p>
+            <button
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                window.location.reload();
+              }}
+              className="bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-5 py-2.5 rounded-xl text-xs"
+            >
+              Reload Application
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [theme, setTheme] = useState<ThemeMode>('dark');
   const [state, setState] = useState<AppState>({
@@ -110,11 +161,11 @@ export default function App() {
       id: `scan_${Date.now()}`,
       timestamp: new Date().toLocaleString(),
       text: currentText,
-      uploadedFiles: currentFiles.map(f => ({
+      uploadedFiles: (currentFiles || []).map(f => ({
         id: f.id,
         name: f.name,
         path: f.path,
-        dataUrl: f.dataUrl,
+        dataUrl: (f.dataUrl && f.dataUrl.length > 50000) ? '' : (f.dataUrl || ''),
         mimeType: f.mimeType,
         size: f.size,
         category: f.category
@@ -124,8 +175,12 @@ export default function App() {
     };
 
     setScanHistory(prev => {
-      const updated = [newScan, ...prev];
-      localStorage.setItem('cocoasense_history', JSON.stringify(updated));
+      const updated = [newScan, ...(prev || [])];
+      try {
+        localStorage.setItem('cocoasense_history', JSON.stringify(updated.slice(0, 20)));
+      } catch (e) {
+        console.warn("Could not persist scan history to localStorage:", e);
+      }
       return updated;
     });
     setActiveHistoryId(newScan.id);
@@ -414,10 +469,12 @@ export default function App() {
           {activePage === 'scan' && (
             <>
               {state.result ? (
-                <AnalysisResultsView
-                  result={state.result}
-                  onNewScan={clearInputs}
-                />
+                <ErrorBoundary>
+                  <AnalysisResultsView
+                    result={state.result}
+                    onNewScan={clearInputs}
+                  />
+                </ErrorBoundary>
               ) : (
                 <ScanWorkspace
                   state={state}
