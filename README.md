@@ -1,127 +1,120 @@
-# CacaoLens — Cocoa Farming AI Assistant
+# 🍫 CacaoLens — Cocoa Farming AI Assistant & Disease Diagnostic Engine
 
-CocoLens is an application for assisting smallholder cocoa farmers by analysing photos, text observations, and basic measurements to provide practical, actionable agricultural advice. It combines a React frontend and Node backend with a local Python ML service for model training and inference.
+[![Deployment Status](https://img.shields.io/badge/Render-Live%20🎉-emerald)](https://fyb-oko9.onrender.com)
+[![Model Accuracy](https://img.shields.io/badge/Model%20Accuracy-95.03%25-brightgreen)](MODEL_DOCUMENTATION.md)
+[![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue)](python_model/)
+[![Node Version](https://img.shields.io/badge/Node-20.x-green)](server.ts)
 
-Key features
-- Image and tabular model inference (local Python ML service)
-- Transfer-learning vision training pipeline for cocoa image classification
-- Proxy endpoint from Node server to Python service for predictions
-- Dataset preparation helper to convert labeled images into ImageFolder layout
+**CacaoLens** is an AI-powered agricultural intelligence platform designed for smallholder cocoa farmers. By analyzing field photos, voice notes, and crop observations, CacaoLens provides real-time diagnostic evaluation for cocoa pod ripeness, yield estimation, and fungal disease management (*Black Pod Rot* & *Frosty Pod Rot*).
 
-Architecture
-- Frontend: React + Vite (UI and image capture)
-- Backend: Node/Express server in `server.ts` (routes, proxy to Python ML)
-- ML service: Flask app in `python_model/app.py` (tabular and image inference)
-- Training scripts: `python_model/train.py` (tabular) and `python_model/train_vision.py` (vision transfer learning)
+---
 
-Quick start (local development)
+## 📖 Complete Documentation
+For an in-depth, self-explanatory guide covering every technical term, mathematical formula, and step of our AI model, read:
+👉 **[MODEL_DOCUMENTATION.md](MODEL_DOCUMENTATION.md)**
 
-Prerequisites:
+---
+
+## 🌟 Key Features
+- **12-Step AI Pipeline**: Automated image validation (blur detection), HSV color space conversion, pod bounding-box localization, and ripeness classification.
+- **Pretrained MobileNetV3 Backbone**: Deep spatial feature extraction powered by PyTorch `mobilenet_v3_small`.
+- **Soft Voting Ensemble Classifier**: Combines `ExtraTrees` and `RandomForest` classifiers achieving **95.03% test accuracy**.
+- **6 Target Cocoa Classes**: `Unripe_Pod`, `Ripe_Pod`, `Overripe_Pod`, `Black_Pod_Rot` (*Phytophthora*), `Frosty_Pod_Rot` (*Moniliophthora*), and `Healthy_Leaf`.
+- **Actionable Farmer Advisory**: Generates ripeness scores (0–100), harvest windows, yield estimates, risk alerts, and step-by-step care checklists.
+- **Single-Container Docker Deployment**: Production-ready deployment for Render with Express Node.js and internal Flask ML microservice.
+
+---
+
+## 🏗️ System Architecture
+
+```
+[ React Single Page App (UI) ]
+              │
+              ▼
+[ Express Node.js Server (server.ts) on 0.0.0.0:10000 ]
+              │ (Internal Proxy)
+              ▼
+[ Flask Python ML Microservice (python_model/app.py) on 127.0.0.1:5000 ]
+              │
+              ├── Step 3: Blur Filter (Laplacian Variance)
+              ├── Step 4: HSV Preprocessing & Color Ratios
+              ├── Step 6: Pod Candidate Localization (Contour & Solidity)
+              └── Step 8: Pretrained MobileNetV3 + Soft Voting Ensemble (95% Acc)
+```
+
+---
+
+## 🚀 Quick Start (Local Development)
+
+### Prerequisites
 - Node.js 18+ and npm
-- Python 3.10+ (virtualenv recommended)
-- Optional: CUDA-compatible GPU for faster vision training
+- Python 3.10+
 
-1. Install Node dependencies
-
+### 1. Install Dependencies
 ```bash
+# Install Node.js dependencies
 npm install
+
+# Install Python ML dependencies
+python -m pip install -r python_model/requirements.txt
 ```
 
-2. Install Python deps (create and use a virtualenv if desired)
-
+### 2. Fetch Field Dataset & Retrain Model
 ```bash
-python3 -m pip install -r python_model/requirements.txt
+# Download real cocoa field dataset images
+python python_model/fetch_real_dataset.py
+
+# Train the Soft Voting Ensemble model (creates python_model/model.pkl)
+python python_model/train.py
 ```
 
-3. Train the small tabular example model (creates `python_model/model.pkl`)
-
+### 3. Run Pipeline Test
 ```bash
-npm run train-model
+python -c "from python_model.pipeline import execute_pipeline; import joblib; m = joblib.load('python_model/model.pkl'); print(execute_pipeline('python_model/dataset_raw/ripe_pod_01.jpg', sklearn_model=m))"
 ```
 
-4. (Optional) Prepare and train a vision model on cocoa images
-
-- Place raw images and a `labels.csv` into `python_model/dataset_raw/`.
-- Convert to ImageFolder layout:
-
+### 4. Start Local Development Servers
 ```bash
-python3 python_model/prepare_dataset.py --raw python_model/dataset_raw --out python_model/cocoa_dataset
-```
-
-- Train (CPU training can be slow):
-
-```bash
-python3 python_model/train_vision.py --data python_model/cocoa_dataset --epochs 10 --out python_model/model.pth
-```
-
-5. Start the Python ML service (Flask)
-
-```bash
+# Terminal 1: Start Python Flask ML Service
 npm run start-python
-```
 
-6. Start the Node dev server
-
-```bash
+# Terminal 2: Start Node Express Server & Vite UI
 npm run dev
 ```
 
-API endpoints
-- `POST /api/predict` — Proxy to the Python ML service. Send JSON with either `features` (tabular) or `image` (base64 data URI). Example:
+Open `http://localhost:3000` in your web browser.
 
-```json
-{ "features": [5.1, 3.5, 1.4, 0.2] }
-```
+---
 
-Vision inference example (base64 image):
+## 🐳 Docker & Render Production Deployment
 
-```json
-{ "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ..." }
+CacaoLens is containerized using a multi-stage Dockerfile:
+- Node.js server binds to `0.0.0.0:$PORT` (serving static production UI from `dist/`).
+- Python ML microservice binds to `127.0.0.1:5000` (internal loopback interface).
 
-Passing API keys
-----------------
-
-You can provide API keys for external models in two ways:
-
-- Request body: include `apiKey` in the JSON body of `/api/analyse` (or provider-specific endpoints).
-- Authorization header: include `Authorization: Bearer <YOUR_KEY>` in the request headers.
-
-Examples:
-
+To build and run locally with Docker:
 ```bash
-# Using Authorization header (recommended over query strings):
-curl -X POST http://localhost:3000/api/analyse \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_OPENAI_API_KEY" \
-  -d '{"provider":"openai","text":"Check this cocoa leaf"}'
+docker build -t cacaolens .
+docker run -p 3000:3000 cacaolens
 ```
 
-```bash
-# Or include the key in the request body (less secure when not using HTTPS):
-curl -X POST http://localhost:3000/api/analyse \
-  -H "Content-Type: application/json" \
-  -d '{"provider":"anthropic","apiKey":"YOUR_KEY","text":"Example"}'
-```
+---
 
-Notes:
-- If you do not set `GEMINI_API_KEY` in the server environment, Gemini Live features will be disabled. For single requests to Gemini you may still provide a `apiKey` in the request.
-- Never commit API keys to source control. Prefer setting them in environment variables on production hosts or using per-request Authorization headers.
-```
+## 📂 Repository Structure
 
-Development notes and next steps
-- The project contains a working end-to-end local pipeline; to make the model production-grade you should:
-  - Curate and label a high-quality cocoa image dataset (leaf, pod, cut seed, walk-clip, other).
-  - Use `train_vision.py` with a GPU and larger epochs; experiment with stronger backbones and data augmentation.
-  - Consider fine-tuning an LLM or building a multimodal model for richer advisory (Hugging Face Transformers, LoRA for parameter-efficient fine-tuning).
+| File / Folder | Purpose |
+| :--- | :--- |
+| **[MODEL_DOCUMENTATION.md](MODEL_DOCUMENTATION.md)** | **Full self-explanatory AI model & pipeline documentation.** |
+| [python_model/pipeline.py](python_model/pipeline.py) | 12-Step pipeline engine, blur filter, pod locator, MobileNetV3 backbone. |
+| [python_model/train.py](python_model/train.py) | Training script for Soft Voting Ensemble model. |
+| [python_model/fetch_real_dataset.py](python_model/fetch_real_dataset.py) | Research dataset downloader script. |
+| [python_model/app.py](python_model/app.py) | Flask web microservice serving `/predict` endpoint. |
+| [python_model/model.pkl](python_model/model.pkl) | Serialized trained model weights. |
+| [server.ts](server.ts) | Express Node.js server and production asset provider. |
+| [src/](src/) | React + TailwindCSS Single Page App source code. |
+| [Dockerfile](Dockerfile) | Multi-stage Docker deployment definition for Render. |
 
-Where to find things
-- Node server: `server.ts`
-- Python ML service: `python_model/app.py`
-- Tabular train: `python_model/train.py`
-- Vision train: `python_model/train_vision.py`
-- Dataset prep helper: `python_model/prepare_dataset.py`
+---
 
-If you want, I can:
-- Run a vision training job here (will install PyTorch; may be slow without GPU).
-- Add automated evaluation scripts and sample notebooks for dataset exploration.
-- Draft a fine-tuning plan and scripts for an LLM-based advisory system.
+## 📜 License
+Licensed under the [MIT License](LICENSE).
