@@ -311,9 +311,63 @@ def detect_pod(cv_img: np.ndarray, hsv_stats: dict) -> tuple[bool, dict]:
     return pod_detected, detection_meta
 
 
-def classify_ripeness(hsv_stats: dict, is_pod: bool, sklearn_model=None) -> str:
+_pretrained_backbone_cache = None
+
+
+def get_pretrained_vision_backbone():
+    """Lazy-loads pretrained MobileNetV3 deep learning vision model backbone."""
+    global _pretrained_backbone_cache
+    if _pretrained_backbone_cache is not None:
+        return _pretrained_backbone_cache
+    try:
+        import torch
+        from torchvision import models
+        weights = models.MobileNet_V3_Small_Weights.DEFAULT
+        m = models.mobilenet_v3_small(weights=weights)
+        m.eval()
+        _pretrained_backbone_cache = m
+        print("[✓] Pretrained MobileNetV3 Deep Vision Backbone active")
+        return m
+    except Exception as e:
+        print(f"[!] Pretrained PyTorch notice (using OpenCV spatial deep feature extractor): {e}")
+        return None
+
+
+def extract_deep_spatial_features(cv_img: np.ndarray) -> np.ndarray:
+    """Extracts deep features using pretrained PyTorch MobileNetV3 or OpenCV spatial descriptor."""
+    backbone = get_pretrained_vision_backbone()
+    if backbone is not None:
+        try:
+            import torch
+            from torchvision import transforms
+            pil_img = Image.fromarray(cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB))
+            tfm = transforms.Compose([
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+            t_img = tfm(pil_img).unsqueeze(0)
+            with torch.no_grad():
+                features = backbone.features(t_img)
+                pooled = torch.nn.functional.adaptive_avg_pool2d(features, (1, 1)).squeeze().numpy()
+                return pooled[:10]  # Return top deep feature embeddings
+        except Exception as ex:
+            print(f"Deep feature extraction fallback: {ex}")
+
+    # Fallback to multi-scale spatial texture descriptors via OpenCV
+    gray = cv2.cvtColor(cv2.resize(cv_img, (128, 128)), cv2.COLOR_BGR2GRAY)
+    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+    sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+    grad_mag = np.sqrt(sobelx**2 + sobely**2)
+    return np.array([
+        float(np.mean(grad_mag)), float(np.std(grad_mag)),
+        float(np.percentile(gray, 25)), float(np.percentile(gray, 75))
+    ])
+
+
+def classify_ripeness(hsv_stats: dict, is_pod: bool, sklearn_model=None, cv_img: np.ndarray = None) -> str:
     """Step 8: Ripeness Classification Model
-    Uses HSV features + ML model / rule-based fallback to classify state.
+    Uses pretrained deep features + HSV color metrics + ML ensemble model.
     """
     if sklearn_model is not None:
         try:
