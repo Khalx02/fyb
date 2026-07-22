@@ -386,9 +386,14 @@ def classify_ripeness(hsv_stats: dict, is_pod: bool, sklearn_model=None, cv_img:
 
     # Rule-based HSV feature classification
     if not is_pod:
-        if hsv_stats['green_ratio'] > 0.35:
+        if hsv_stats['green_ratio'] > 0.25:
             return "Healthy_Leaf"
-        return "No_Pod_Detected"
+        elif hsv_stats['brown_dark_ratio'] > 0.35:
+            return "Black_Pod_Rot"
+        elif hsv_stats['yellow_ratio'] > 0.15:
+            return "Ripe_Pod"
+        elif hsv_stats['v_mean'] < 35 and hsv_stats['s_mean'] < 35:
+            return "No_Pod_Detected"
 
     # Fungal check: High dark ratio or white rot ratio
     if hsv_stats['brown_dark_ratio'] > 0.40:

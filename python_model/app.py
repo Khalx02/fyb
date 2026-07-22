@@ -209,6 +209,42 @@ def parse_text_query(text: str):
     return REAL_CLASS_DIAGNOSTICS["Healthy_Pod"]
 
 
+def classify_image_with_torch(img_b64: str):
+    torch_model, classes = _load_torch_model()
+    if torch_model is None or not classes:
+        return None
+    try:
+        import torch
+        from torchvision import transforms
+        from PIL import Image
+        if isinstance(img_b64, str):
+            if img_b64.startswith("data:"):
+                _, img_b64 = img_b64.split(",", 1)
+            img_bytes = base64.b64decode(img_b64)
+            pil_img = Image.open(BytesIO(img_bytes)).convert("RGB")
+        elif isinstance(img_b64, Image.Image):
+            pil_img = img_b64.convert("RGB")
+        else:
+            return None
+
+        tfm = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+        t_img = tfm(pil_img).unsqueeze(0)
+        with torch.no_grad():
+            output = torch_model(t_img)
+            _, pred_idx = torch.max(output, 1)
+            cls_name = classes[pred_idx.item()]
+            if cls_name in REAL_CLASS_DIAGNOSTICS:
+                return REAL_CLASS_DIAGNOSTICS[cls_name]
+    except Exception as e:
+        print(f"Torch inference notice: {e}")
+    return None
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.get_json(force=True) or {}
@@ -217,6 +253,12 @@ def predict():
     # Base64 Image classification
     img_b64 = data.get('image')
     if img_b64:
+        # 1. Try PyTorch Deep Learning model inference first
+        torch_res = classify_image_with_torch(img_b64)
+        if torch_res:
+            return jsonify(torch_res), 200
+
+        # 2. Fallback to 12-step vision pipeline
         try:
             from pipeline import execute_pipeline
             result = execute_pipeline(img_b64, sklearn_model=model)
