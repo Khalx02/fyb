@@ -191,6 +191,17 @@ def _load_torch_model():
         return None, None
 
 
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({
+        'service': 'CacaoLens Real ML API Service',
+        'status': 'running',
+        'health_check': '/health',
+        'predict_endpoint': '/predict (POST)',
+        'app_ui_url': 'http://localhost:3000'
+    }), 200
+
+
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok', 'dataset': 'Real Cocoa Diseases Dataset'})
