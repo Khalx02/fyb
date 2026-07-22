@@ -20,20 +20,17 @@ interface ErrorBoundaryState {
 }
 
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+  override state: ErrorBoundaryState = { hasError: false, error: null };
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("React Error Boundary captured crash:", error, errorInfo);
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-stone-950 text-white p-6 text-center">
@@ -388,24 +385,11 @@ export default function App() {
         throw new Error(resultData?.error || `Server processing error (${response.status})`);
       }
 
-      const result: AnalysisResult = resultData || {
-        isCocoa: true,
-        objectType: "Cocoa Crop Evaluation",
-        ripenessLabel: "Trained Vision Model Assessment",
-        ripenessScore: 94,
-        weeksToHarvest: "1 - 2 Weeks",
-        estimatedAgeWeeks: "18 - 20 Weeks",
-        bestHarvestWindow: "Optimal Harvest Window",
-        podYieldEstimate: "High Yield (45-50 Grade A Beans)",
-        characteristics: "Optimal pod pericarp coloration and chlorophyll venation.",
-        harvestRecommendations: [
-          "Harvest using sharp shears leaving 1cm stem cushion attached.",
-          "Ferment beans within 48 hours of pod breaking."
-        ],
-        risks: ["Low disease risk."],
-        nextSteps: ["Schedule morning harvest window."],
-        gaugeColor: "#10B981"
-      };
+      if (!resultData) {
+        throw new Error("Invalid or empty response received from diagnostic server.");
+      }
+
+      const result: AnalysisResult = resultData;
 
       setState(prev => ({ ...prev, result, loading: false }));
       saveToHistory(result, text, state.uploadedFiles, state.audioName);

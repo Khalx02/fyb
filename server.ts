@@ -8,6 +8,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import dotenv from 'dotenv';
+import { parseLocalAgronomicQuery } from './localKnowledgeEngine';
 
 dotenv.config();
 
@@ -47,7 +48,10 @@ CRITICAL FIRST STEP:
 First, carefully verify if the provided images or descriptions are actually related to cocoa (cacao) plants, pods, leaves, seeds, or farm walk clips.
 If they are clearly NOT related to cocoa (e.g. a picture of a cat, a car, or a different plant), you MUST set "isCocoa" to false, and explain in the "characteristics" field what you see instead. For all other required fields, output "N/A" or 0.
 
-If it IS cocoa, set "isCocoa" to true, and classify what is primarily shown in the "objectType" field as one of: "Leaf", "Pod", "Cut Seed", "Walk Clip", or "Other".
+If it IS cocoa, set "isCocoa" to true, and classify what is primarily shown in the "objectType" field as one of: "Leaf", "Pod", "Cut Seed", "Walk Clip", "Agronomic Query Advisory", or "Other".
+
+IMPORTANT: If the user is asking a text question or describing a problem (e.g., Black Pod, Swollen Shoot, fermentation, fertilizer, shade, pruning, capsids), directly address their specific question and situation in the "characteristics", "harvestRecommendations", "risks", and "nextSteps" fields.
+
 Then, base your analysis on well-known cocoa indicators for that specific object type:
 - Pods: Colour change, surface texture, firmness, visible mould/dark patches (Black Pod), insect damage (Capsid bugs).
 - Leaves: Health as an indicator of tree stress, micro-nutrient deficiencies, fungal spots.
@@ -255,13 +259,13 @@ app.post('/api/analyse', async (req, res) => {
       resText = resText.replace(/```json\n?|\n?```/g, '').trim();
       resultJson = JSON.parse(resText);
     } else if (provider === 'local' || provider === 'trained-model' || !provider) {
-      // Use the locally trained Python ML service (PyTorch / Scikit-Learn model)
+      // Use the locally trained Python ML service or local agronomic knowledge engine
       const image = images?.[0]?.data || files?.[0]?.data;
       const targetUrls = [
         'http://127.0.0.1:5000/predict',
         process.env.PYTHON_ML_URL
       ].filter((u): u is string => Boolean(u));
-      const payload = image ? { image } : { features: [5.1, 3.5, 1.4, 0.2] };
+      const payload = image ? { image, text } : { text, features: [5.1, 3.5, 1.4, 0.2] };
 
       let mlSuccess = false;
       for (const url of targetUrls) {
@@ -273,74 +277,30 @@ app.post('/api/analyse', async (req, res) => {
           });
           const responseText = await response.text();
           if (response.ok && responseText) {
-            resultJson = JSON.parse(responseText);
-            mlSuccess = true;
-            break;
+            const parsed = JSON.parse(responseText);
+            if (parsed && (parsed.isCocoa !== undefined || parsed.ripenessLabel)) {
+              resultJson = parsed;
+              mlSuccess = true;
+              break;
+            }
           }
         } catch (err) {
           console.warn(`Python ML fetch failed for ${url}:`, err);
         }
       }
       if (!mlSuccess) {
-        console.warn('Python ML service fallback triggered');
-        resultJson = {
-          isCocoa: true,
-          objectType: image ? "Cocoa Pod Evaluation" : "Agricultural Feature Assessment",
-          ripenessLabel: "Trained Model Assessment (Active)",
-          ripenessScore: 94,
-          weeksToHarvest: "1 - 2 Weeks",
-          estimatedAgeWeeks: "18 - 20 Weeks",
-          bestHarvestWindow: "Optimal Harvest Period",
-          podYieldEstimate: "High Yield (45-50 Grade A Beans)",
-          characteristics: "Visual pericarp coloration, intact venation, optimal cocoa fat content potential.",
-          harvestRecommendations: [
-            "Harvest using sharp shears leaving 1cm stem cushion attached.",
-            "Ferment beans within 48 hours of pod breaking.",
-            "Maintain 6-day sweat-box fermentation protocol."
-          ],
-          risks: [
-            "Low fungal risk. Continue weekly canopy inspections."
-          ],
-          nextSteps: [
-            "Schedule harvesting window for early morning.",
-            "Inspect fermentation boxes for proper aeration."
-          ],
-          gaugeColor: "#10B981"
-        };
+        console.warn('Using intelligent local agronomic knowledge engine fallback');
+        resultJson = parseLocalAgronomicQuery(text, Boolean(image));
       }
     } else {
-      resultJson = {
-        isCocoa: true,
-        objectType: "Cocoa Diagnostic",
-        ripenessLabel: "Trained Model Assessment",
-        ripenessScore: 92,
-        weeksToHarvest: "1 - 2 Weeks",
-        bestHarvestWindow: "Optimal Harvest Window",
-        characteristics: "Crop diagnostic evaluation active.",
-        harvestRecommendations: ["Maintain standard harvest protocol."],
-        risks: ["Low disease risk."],
-        nextSteps: ["Monitor crop weekly."],
-        gaugeColor: "#10B981"
-      };
+      const image = images?.[0]?.data || files?.[0]?.data;
+      resultJson = parseLocalAgronomicQuery(text, Boolean(image));
     }
 
     res.status(200).json(resultJson);
   } catch (error: any) {
-    console.error('Analysis error caught, returning diagnostic fallback:', error);
-    res.status(200).json({
-      isCocoa: true,
-      objectType: "Cocoa Evaluation",
-      ripenessLabel: "Trained Model Assessment",
-      ripenessScore: 94,
-      weeksToHarvest: "1 - 2 Weeks",
-      bestHarvestWindow: "Optimal Harvest Window",
-      podYieldEstimate: "High Yield",
-      characteristics: "Crop evaluation completed successfully.",
-      harvestRecommendations: ["Harvest cleanly with sharp shears."],
-      risks: ["Low risk."],
-      nextSteps: ["Proceed to fermentation."],
-      gaugeColor: "#10B981"
-    });
+    console.error('Analysis error caught, returning local knowledge advisory:', error);
+    res.status(200).json(parseLocalAgronomicQuery(req.body?.text || '', Boolean(req.body?.images?.[0] || req.body?.files?.[0])));
   }
 });
 
@@ -357,37 +317,11 @@ app.post('/api/predict', async (req, res) => {
     if (response.ok && responseText) {
       res.status(200).json(JSON.parse(responseText));
     } else {
-      res.status(200).json({
-        isCocoa: true,
-        objectType: "Cocoa Crop Evaluation",
-        ripenessLabel: "Optimal Pod Ripeness",
-        ripenessScore: 94,
-        weeksToHarvest: "1 - 2 Weeks",
-        estimatedAgeWeeks: "20 Weeks",
-        bestHarvestWindow: "Peak Harvest Window",
-        podYieldEstimate: "High Yield",
-        characteristics: "Healthy pod pericarp development.",
-        harvestRecommendations: ["Harvest cleanly with sharp shears."],
-        risks: ["Low disease risk."],
-        nextSteps: ["Proceed to fermentation."],
-        gaugeColor: "#10B981"
-      });
+      res.status(200).json(parseLocalAgronomicQuery(req.body?.text || '', Boolean(req.body?.image)));
     }
   } catch (err) {
     console.error('Predict proxy error:', err);
-    res.status(200).json({
-      isCocoa: true,
-      objectType: "Cocoa Diagnostic",
-      ripenessLabel: "Healthy Crop Assessment",
-      ripenessScore: 92,
-      weeksToHarvest: "1 - 2 Weeks",
-      bestHarvestWindow: "Optimal Harvest Window",
-      characteristics: "Crop evaluation completed successfully.",
-      harvestRecommendations: ["Maintain standard harvest protocol."],
-      risks: ["Low risk."],
-      nextSteps: ["Monitor crop weekly."],
-      gaugeColor: "#10B981"
-    });
+    res.status(200).json(parseLocalAgronomicQuery(req.body?.text || '', Boolean(req.body?.image)));
   }
 });
 

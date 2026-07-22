@@ -196,13 +196,38 @@ def health():
     return jsonify({'status': 'ok', 'dataset': 'Real Cocoa Diseases Dataset'})
 
 
+def parse_text_query(text: str):
+    q = (text or "").lower()
+    if any(k in q for k in ["black pod", "phytophthora", "dark patch", "black rot", "copper"]):
+        return REAL_CLASS_DIAGNOSTICS["Black_Pod_Rot"]
+    if any(k in q for k in ["frosty", "monilia", "white powder", "spore mat"]):
+        return REAL_CLASS_DIAGNOSTICS["Frosty_Pod_Rot"]
+    if any(k in q for k in ["swollen shoot", "cssvd", "mealybug", "red vein", "virus"]):
+        return REAL_CLASS_DIAGNOSTICS["CSSVD"]
+    if any(k in q for k in ["leaf", "leaves", "chlorosis", "yellowing", "foliage"]):
+        return REAL_CLASS_DIAGNOSTICS["Healthy_Leaf"]
+    return REAL_CLASS_DIAGNOSTICS["Healthy_Pod"]
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.get_json(force=True) or {}
+    text_input = data.get('text')
     
+    # Base64 Image classification
+    img_b64 = data.get('image')
+    if img_b64:
+        try:
+            from pipeline import execute_pipeline
+            result = execute_pipeline(img_b64, sklearn_model=model)
+            return jsonify(result), 200
+        except Exception as e:
+            print(f"Prediction error: {e}")
+            return jsonify(parse_text_query(text_input)), 200
+
     # Tabular / sklearn features
     features = data.get('features')
-    if features is not None:
+    if features is not None and not text_input:
         if model is None:
             return jsonify({'error': 'Sklearn model not found. Run train.py to create model.pkl'}), 500
         try:
@@ -217,19 +242,7 @@ def predict():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-    # Base64 Image classification
-    img_b64 = data.get('image')
-    if img_b64:
-        try:
-            from pipeline import execute_pipeline
-            result = execute_pipeline(img_b64, sklearn_model=model)
-            return jsonify(result), 200
-        except Exception as e:
-            print(f"Prediction error: {e}")
-            return jsonify(REAL_CLASS_DIAGNOSTICS["Healthy_Pod"]), 200
-
-    # If text observation or empty payload, return default cocoa pod diagnostic
-    return jsonify(REAL_CLASS_DIAGNOSTICS["Healthy_Pod"]), 200
+    return jsonify(parse_text_query(text_input)), 200
 
 
 if __name__ == '__main__':
