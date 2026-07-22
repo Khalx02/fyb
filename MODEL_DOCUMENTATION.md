@@ -64,9 +64,9 @@ Computers usually read photos in RGB (Red, Green, Blue). But RGB makes it hard t
 
 - **Formula**:
 
-$$
-\text{Var}(\Delta f) = \frac{1}{N}\sum (L(x, y) - \mu_L)^2
-$$
+```
+Var(ΔF) = (1/N) × Σ (L(x, y) - μL)²
+```
 
 - **Analogy**: Putting "reading glasses" on the computer. If a farmer takes a shaky, blurry photo, the computer measures the sharpness score. If the score is under 10.0, the computer politely asks for a clearer photo instead of making a wrong guess.
 
@@ -74,9 +74,9 @@ $$
 - **What it means**: Outlining the border of objects in a picture to locate oval cocoa pods.
 - **Solidity (S)**: Measures how solid and rounded an object is compared to its boundary box:
 
-$$
-S = \frac{\text{Area}_{\text{contour}}}{\text{Area}_{\text{convex\_hull}}}
-$$
+```
+S = Area(contour) / Area(convex_hull)
+```
 
 Cocoa pods are smooth ovals (high solidity), while background branches are jagged sticks (low solidity).
 
@@ -138,9 +138,9 @@ To ensure balanced training across all 6 classes, the dataset was augmented with
 ### 5.3 Optimization & Impurity Minimization
 During ensemble training, decision tree split nodes were optimized by minimizing **Gini Impurity** (G):
 
-$$
-G = 1 - \sum_{i=1}^{K} p_i^2
-$$
+```
+G = 1 - Σ (p_i)²,  for i = 1 to K
+```
 
 where p_i is the probability of a sample belonging to class i. Trees expand up to `max_depth=16` until node purity is achieved.
 
@@ -212,9 +212,9 @@ where p_i is the probability of a sample belonging to class i. Trees expand up t
 - **Tree 2 (RandomForestClassifier)**: 120 decision trees trained on bootstrap sub-samples.
 - **Soft Voting Formula**:
 
-$$
-P(\text{Class}_c) = \frac{1}{2} \left[ P_{\text{ExtraTrees}}(\text{Class}_c) + P_{\text{RandomForest}}(\text{Class}_c) \right]
-$$
+```
+P(Class_c) = 1/2 × [ P_ExtraTrees(Class_c) + P_RandomForest(Class_c) ]
+```
 
 ---
 
