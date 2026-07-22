@@ -1,14 +1,14 @@
-# 🍫 CacaoLens AI Engine — Complete, In-Depth & Self-Explanatory Model Documentation
+# CacaoLens AI Engine — Complete, In-Depth & Self-Explanatory Model Documentation
 
-Welcome to the **CacaoLens AI Engine Master Documentation**! 
+Welcome to the **CacaoLens AI Engine Master Documentation**!
 
-This guide explains **everything** about how our cocoa plant AI was designed, built, trained, and evaluated. It details the exact **parameter counts**, mathematical foundations, dataset pipelines, and container deployment. 
+This guide explains **everything** about how our cocoa plant AI was designed, built, trained, and evaluated. It details the exact **parameter counts**, mathematical foundations, dataset pipelines, and container deployment.
 
-Every technical term is explained deeply in simple, plain language with real-world analogies!
+Every technical term is explained deeply in simple, plain language with real-world analogies.
 
 ---
 
-## 📚 Master Table of Contents
+## Master Table of Contents
 1. [What is CacaoLens AI? (Simple Explanation)](#1-what-is-cacaolens-ai-simple-explanation)
 2. [Master Glossary of Deep Learning & AI Terms](#2-master-glossary-of-deep-learning--ai-terms)
 3. [How the AI Was Built (Step-by-Step Technology Stack)](#3-how-the-ai-was-built-step-by-step-technology-stack)
@@ -28,52 +28,66 @@ Every technical term is explained deeply in simple, plain language with real-wor
 ## 1. What is CacaoLens AI? (Simple Explanation)
 
 Imagine having an **expert cocoa farming scientist** standing next to you on your farm 24/7. Whenever you take a photo of a cocoa pod or leaf with your phone, this expert instantly looks at the picture and tells you:
+
 - *"Is this pod ready to harvest today?"*
 - *"Is it still green and needs 4 more weeks to grow?"*
 - *"Is it infected with Black Pod Rot disease that needs to be removed immediately?"*
 - *"How many high-quality cocoa beans will this pod yield?"*
 
-**CacaoLens AI** is that expert scientist, built entirely into a fast computer program!
+**CacaoLens AI** is that expert scientist, built entirely into a fast computer program.
 
 ---
 
 ## 2. Master Glossary of Deep Learning & AI Terms
 
-### 🎛️ 1. Model Parameters (Weights & Biases)
+### 2.1 Model Parameters (Weights & Biases)
 - **What it means**: Parameters are the internal "adjustable knobs" inside a computer brain. During training, the computer adjusts millions of parameters until it gets every answer right.
 - **Analogy**: Like tuning 2.7 million tiny radio dials until the sound is crystal clear.
 - **CacaoLens Parameter Count**: **2,726,856 Parameters (2.72 Million Parameters)**.
 
-### 🧠 2. Pretrained Neural Network (MobileNetV3)
+### 2.2 Pretrained Neural Network (MobileNetV3)
 - **What it means**: A deep learning vision model that has already been trained on millions of general images (cars, animals, plants, objects). Because it already knows how to detect edges, curves, and textures, it learns cocoa details instantly.
 - **Analogy**: A student who has already graduated from general high school (pretrained) before taking a specialized cocoa farming course.
 
-### 🔍 3. Convolutional Neural Network (CNN)
+### 2.3 Convolutional Neural Network (CNN)
 - **What it means**: A neural network that slides small mathematical "magnifying glasses" (convolutional filters) over an image to scan for edges, colors, and textures.
 
-### 🎨 4. HSV Color Space (Hue, Saturation, Value)
+### 2.4 HSV Color Space (Hue, Saturation, Value)
 Computers usually read photos in RGB (Red, Green, Blue). But RGB makes it hard to distinguish lighting changes from actual color changes. CacaoLens converts images to **HSV**:
-- **Hue (H - Color Tint)**: What color family is it? ($0^\circ-180^\circ$). Green ($40-80^\circ$) means unripe. Yellow ($18-34^\circ$) means ripe. Brown/Dark ($<20^\circ$) means rot or overripe.
-- **Saturation (S - Color Purity)**: How rich or intense is the color? High saturation means a bright yellow pod; low saturation means a dull white mold mat.
-- **Value (V - Brightness)**: How light or dark is the pixel? Fungal rot spots appear dark (low Value), while white mold spores appear bright (high Value).
 
-### 📐 5. Laplacian Variance (Blur Filter)
+- **Hue (H — Color Tint)**: What color family is it? ($0^\circ$–$180^\circ$). Green ($40$–$80^\circ$) means unripe. Yellow ($18$–$34^\circ$) means ripe. Brown/Dark ($<20^\circ$) means rot or overripe.
+- **Saturation (S — Color Purity)**: How rich or intense is the color? High saturation means a bright yellow pod; low saturation means a dull white mold mat.
+- **Value (V — Brightness)**: How light or dark is the pixel? Fungal rot spots appear dark (low Value), while white mold spores appear bright (high Value).
+
+### 2.5 Laplacian Variance (Blur Filter)
 - **What it means**: A math formula that calculates the rate of change in image brightness to measure sharpness.
-- **Formula**: $\text{Var}(\Delta f) = \frac{1}{N}\sum (L(x, y) - \mu_L)^2$
+
+- **Formula**:
+
+$$
+\text{Var}(\Delta f) = \frac{1}{N}\sum (L(x, y) - \mu_L)^2
+$$
+
 - **Analogy**: Putting "reading glasses" on the computer. If a farmer takes a shaky, blurry photo, the computer measures the sharpness score. If the score is under $10.0$, the computer politely asks for a clearer photo instead of making a wrong guess.
 
-### ⭕ 6. Contour & Solidity Analysis (Pod Locator)
+### 2.6 Contour & Solidity Analysis (Pod Locator)
 - **What it means**: Outlining the border of objects in a picture to locate oval cocoa pods.
-- **Solidity ($S$)**: Measures how solid and rounded an object is compared to its boundary box ($S = \frac{\text{Area}_{\text{contour}}}{\text{Area}_{\text{convex\_hull}}}$). Cocoa pods are smooth ovals (high solidity), while background branches are jagged sticks (low solidity).
+- **Solidity ($S$)**: Measures how solid and rounded an object is compared to its boundary box:
 
-### 🌲 7. Voting Ensemble Classifier (ExtraTrees + RandomForest)
+$$
+S = \frac{\text{Area}_{\text{contour}}}{\text{Area}_{\text{convex\_hull}}}
+$$
+
+Cocoa pods are smooth ovals (high solidity), while background branches are jagged sticks (low solidity).
+
+### 2.7 Voting Ensemble Classifier (ExtraTrees + RandomForest)
 - **What it means**: Combining multiple independent decision tree models into a single "committee".
-- **Analogy**: Asking 240 different cocoa expert judges to vote on a photo. If 230 judges say *"Ripe Pod"*, the computer returns *"Ripe Pod"* with high confidence!
+- **Analogy**: Asking 240 different cocoa expert judges to vote on a photo. If 230 judges say *"Ripe Pod"*, the computer returns *"Ripe Pod"* with high confidence.
 
-### 📊 8. Stratified 80/20 Train/Test Split
+### 2.8 Stratified 80/20 Train/Test Split
 - **What it means**: Splitting a dataset into 80% for learning (training) and 20% for testing (final exam). Stratified means both sets get equal shares of unripe, ripe, and diseased pods.
 
-### 🍄 9. Phytophthora & Moniliophthora (Black Pod & Frosty Pod Rot)
+### 2.9 Phytophthora & Moniliophthora (Black Pod & Frosty Pod Rot)
 - **Black Pod Rot (*Phytophthora*)**: A dangerous fungal disease that turns cocoa pods dark brown/black with wet necrotic rot.
 - **Frosty Pod Rot (*Moniliophthora*)**: A destructive disease that causes swollen pods covered in a dense white/cream powdery spore mat.
 
@@ -83,7 +97,7 @@ Computers usually read photos in RGB (Red, Green, Blue). But RGB makes it hard t
 
 CacaoLens AI was engineered using an end-to-end Python & Node.js architecture:
 
-1. **Computer Vision & Image Processing**: Built using **OpenCV (Open Source Computer Vision Library)** and **Pillow (PIL)** for image loading, resizing ($224\times 224$), RGB-to-HSV color space conversion, and Laplacian blur filtering.
+1. **Computer Vision & Image Processing**: Built using **OpenCV (Open Source Computer Vision Library)** and **Pillow (PIL)** for image loading, resizing ($224 \times 224$), RGB-to-HSV color space conversion, and Laplacian blur filtering.
 2. **Deep Learning Vision Engine**: Built using **PyTorch 2.x** and **Torchvision**, instantiating the pretrained `mobilenet_v3_small` architecture to extract 10-dimensional deep feature embeddings.
 3. **Machine Learning Voting Ensemble**: Built using **Scikit-Learn 1.3**, combining `ExtraTreesClassifier` ($120$ trees) and `RandomForestClassifier` ($120$ trees) using soft probability voting (`voting='soft'`).
 4. **Python Web Microservice**: Built with **Flask** (`python_model/app.py`), exposing JSON prediction endpoints on `http://127.0.0.1:5000/predict`.
@@ -100,7 +114,7 @@ The CacaoLens AI Engine contains **2,726,856 total parameters (2.72 Million Para
 | :--- | :--- | :---: | :--- |
 | **MobileNetV3 Small Vision Backbone** | Pretrained Convolutional Weights & Biases | **2,542,856** | Deep spatial feature extraction (detecting pericarp ridges, spot boundaries, texture gradients). |
 | **ExtraTrees Classifier (120 Trees)** | Decision Node Split Thresholds & Feature Indices | **~92,000** | Extremely randomized tree splits analyzing 20-dim feature vectors. |
-| **RandomForest Classifier (120 Trees)**| Decision Node Split Thresholds & Feature Indices | **~92,000** | Bootstrap ensemble decision trees evaluating feature Gini impurity. |
+| **RandomForest Classifier (120 Trees)** | Decision Node Split Thresholds & Feature Indices | **~92,000** | Bootstrap ensemble decision trees evaluating feature Gini impurity. |
 | **Total AI Parameter Count** | **Combined Deep + Ensemble Model** | **2,726,856** | **Complete intelligence parameter size (~2.72 Million parameters).** |
 
 ---
@@ -109,19 +123,25 @@ The CacaoLens AI Engine contains **2,726,856 total parameters (2.72 Million Para
 
 ### 5.1 Dataset Acquisition (`python_model/fetch_real_dataset.py`)
 Real field dataset images were collected across open agricultural research mirrors (Zenodo *Moniliophthora* datasets, Kaggle Cacao Diseases, Wikimedia Commons open research mirrors):
+
 - Real cocoa pod photos spanning immature green pods, ripe yellow pods, overripe brown pods, *Phytophthora* black rot, *Moniliophthora* white mold, and healthy leaves.
 
 ### 5.2 Data Augmentation & Feature Synthesis
 To ensure balanced training across all 6 classes, the dataset was augmented with 1,500 feature vectors synthesized from real visual HSV profile distributions:
-- **Green Pericarp Range**: $H: 38-75^\circ, S: 120-220, V: 100-200$
-- **Golden Ripe Range**: $H: 18-34^\circ, S: 160-255, V: 180-255$
-- **Overripe Range**: $H: 8-22^\circ, S: 80-160, V: 50-110$
-- **Black Rot Range**: $H: 0-180^\circ, S: 20-100, V: 15-65$
-- **Frosty Rot Range**: $H: 0-180^\circ, S: 5-35, V: 190-255$
+
+- **Green Pericarp Range**: $H: 38$–$75^\circ,\ S: 120$–$220,\ V: 100$–$200$
+- **Golden Ripe Range**: $H: 18$–$34^\circ,\ S: 160$–$255,\ V: 180$–$255$
+- **Overripe Range**: $H: 8$–$22^\circ,\ S: 80$–$160,\ V: 50$–$110$
+- **Black Rot Range**: $H: 0$–$180^\circ,\ S: 20$–$100,\ V: 15$–$65$
+- **Frosty Rot Range**: $H: 0$–$180^\circ,\ S: 5$–$35,\ V: 190$–$255$
 
 ### 5.3 Optimization & Impurity Minimization
 During ensemble training, decision tree split nodes were optimized by minimizing **Gini Impurity** ($G$):
-$$G = 1 - \sum_{i=1}^{K} p_i^2$$
+
+$$
+G = 1 - \sum_{i=1}^{K} p_i^2
+$$
+
 where $p_i$ is the probability of a sample belonging to class $i$. Trees expand up to `max_depth=16` until node purity is achieved.
 
 ---
@@ -130,49 +150,49 @@ where $p_i$ is the probability of a sample belonging to class $i$. Trees expand 
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│             1. Data Source (Phone / Drone)             │
+│             1. Data Source (Phone / Drone)              │
 └───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│   2. Data Collection (6 Labeled Cocoa Crop Classes)    │
+                             │
+┌────────────────────────────▼───────────────────────────┐
+│    2. Data Collection (6 Labeled Cocoa Crop Classes)    │
 └───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│ 3. Data Validation (Blur filter via Laplacian Variance)│
+                             │
+┌────────────────────────────▼───────────────────────────┐
+│ 3. Data Validation (Blur filter via Laplacian Variance) │
 └───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│ 4. Data Preprocessing (Resize 224x224 & HSV Conversion)│
+                             │
+┌────────────────────────────▼───────────────────────────┐
+│ 4. Data Preprocessing (Resize 224x224 & HSV Conversion) │
 └───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│      5. Train / Test Split (80/20 Stratified Split)    │
+                             │
+┌────────────────────────────▼───────────────────────────┐
+│      5. Train / Test Split (80/20 Stratified Split)     │
 └───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│ 6. Pod Detection Model (HSV Mask & Contour Extraction) │
+                             │
+┌────────────────────────────▼───────────────────────────┐
+│  6. Pod Detection Model (HSV Mask & Contour Extraction) │
 └───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│        7. Decision Check: Pod Detected in Frame?       │
-└───────────────┬─────────────────────────┬──────────────┘
-                │ yes                     │ no
-                │                         ▼
-                │           ┌────────────────────────────┐
-                │           │ 12. Continue Monitoring    │
-                │           │ (Prompt for Next Frame)    │
-                │           └─────────────┬──────────────┘
-                │                         │ next frame
-                ▼                         │
-┌───────────────────────────────┐         │
-│ 8. Ripeness & Disease CNN     │◄────────┘
-│    (MobileNetV3 + Ensemble)   │
-└───────────────┬───────────────┘
-                │
-┌───────────────▼───────────────┐
-│ 9, 10, 11. Diagnostic Output  │
-│ (Score, Harvest Window, Risks)│
-└───────────────────────────────┘
+                             │
+┌────────────────────────────▼───────────────────────────┐
+│        7. Decision Check: Pod Detected in Frame?        │
+└───────────────┬─────────────────────────┬───────────────┘
+                │ yes                      │ no
+                │                          ▼
+                │            ┌─────────────────────────────┐
+                │            │ 12. Continue Monitoring      │
+                │            │ (Prompt for Next Frame)      │
+                │            └─────────────┬─────────────────┘
+                │                          │ next frame
+                ▼                          │
+┌────────────────────────────────┐         │
+│ 8. Ripeness & Disease CNN      │◄────────┘
+│    (MobileNetV3 + Ensemble)    │
+└────────────────┬───────────────┘
+                 │
+┌────────────────▼───────────────┐
+│ 9, 10, 11. Diagnostic Output   │
+│ (Score, Harvest Window, Risks) │
+└─────────────────────────────────┘
 ```
 
 ---
@@ -180,7 +200,7 @@ where $p_i$ is the probability of a sample belonging to class $i$. Trees expand 
 ## 7. Pretrained MobileNetV3 "Computer Vision Brain"
 
 - **Architecture**: Inverted residual blocks with squeeze-and-excitation modules.
-- **Input Size**: $224\times 224 \times 3$ RGB image tensor.
+- **Input Size**: $224 \times 224 \times 3$ RGB image tensor.
 - **Normalization**: ImageNet mean $[0.485, 0.456, 0.406]$ and std $[0.229, 0.224, 0.225]$.
 - **Embedding Output**: 10-dimensional spatial feature vector fed into the Voting Ensemble.
 
@@ -191,7 +211,10 @@ where $p_i$ is the probability of a sample belonging to class $i$. Trees expand 
 - **Tree 1 (ExtraTreesClassifier)**: 120 randomized decision trees.
 - **Tree 2 (RandomForestClassifier)**: 120 decision trees trained on bootstrap sub-samples.
 - **Soft Voting Formula**:
-  $$P(\text{Class}_c) = \frac{1}{2} \left[ P_{\text{ExtraTrees}}(\text{Class}_c) + P_{\text{RandomForest}}(\text{Class}_c) \right]$$
+
+$$
+P(\text{Class}_c) = \frac{1}{2} \left[ P_{\text{ExtraTrees}}(\text{Class}_c) + P_{\text{RandomForest}}(\text{Class}_c) \right]
+$$
 
 ---
 
@@ -199,18 +222,18 @@ where $p_i$ is the probability of a sample belonging to class $i$. Trees expand 
 
 | Class | Ripeness Score | Harvest Window | Key Visual Traits | Recommended Farmer Action |
 | :--- | :---: | :---: | :--- | :--- |
-| **`Unripe_Pod`** | 35 / 100 | 4 – 6 Weeks | Deep green pericarp ($H: 35-75^\circ$) | Do not pick yet; allow cocoa fat content to build. |
-| **`Ripe_Pod`** | 95 / 100 | 0 – 1 Week | Golden yellow/orange ($H: 18-34^\circ$) | Harvest with sharp shears leaving 1cm stem attached. |
-| **`Overripe_Pod`**| 60 / 100 | Immediate Pick | Dull orange-brown ($V < 110$) | Pick today; discard germinated seeds during breaking. |
-| **`Black_Pod_Rot`**| 20 / 100 | Do Not Sell | Dark necrotic rot spot ($V < 65$) | Remove pod immediately; apply copper fungicide. |
-| **`Frosty_Pod_Rot`**| 15 / 100 | Quarantine | Dense white powdery mold mat | Sanitation pick; bury pod under 10cm soil. |
-| **`Healthy_Leaf`**| 92 / 100 | Active Canopy | Deep green lamina ($H: 40-80^\circ$) | Maintain soil N-P-K-Mg fertility schedule. |
+| `Unripe_Pod` | 35 / 100 | 4 – 6 Weeks | Deep green pericarp ($H: 35$–$75^\circ$) | Do not pick yet; allow cocoa fat content to build. |
+| `Ripe_Pod` | 95 / 100 | 0 – 1 Week | Golden yellow/orange ($H: 18$–$34^\circ$) | Harvest with sharp shears leaving 1cm stem attached. |
+| `Overripe_Pod` | 60 / 100 | Immediate Pick | Dull orange-brown ($V < 110$) | Pick today; discard germinated seeds during breaking. |
+| `Black_Pod_Rot` | 20 / 100 | Do Not Sell | Dark necrotic rot spot ($V < 65$) | Remove pod immediately; apply copper fungicide. |
+| `Frosty_Pod_Rot` | 15 / 100 | Quarantine | Dense white powdery mold mat | Sanitation pick; bury pod under 10cm soil. |
+| `Healthy_Leaf` | 92 / 100 | Active Canopy | Deep green lamina ($H: 40$–$80^\circ$) | Maintain soil N-P-K-Mg fertility schedule. |
 
 ---
 
 ## 10. Model Evaluation & 95.03% Accuracy Exam Results
 
-Evaluated on an **80/20 Stratified Train/Test Split** ($1,204$ training samples, $302$ test samples):
+Evaluated on an **80/20 Stratified Train/Test Split** ($1{,}204$ training samples, $302$ test samples):
 
 - **Overall Test Accuracy**: **95.03%**
 - **Weighted F1-Score**: **95.00%**
