@@ -55,7 +55,7 @@ Imagine having an **expert cocoa farming scientist** standing next to you on you
 ### 2.4 HSV Color Space (Hue, Saturation, Value)
 Computers usually read photos in RGB (Red, Green, Blue). But RGB makes it hard to distinguish lighting changes from actual color changes. CacaoLens converts images to **HSV**:
 
-- **Hue (H — Color Tint)**: What color family is it? ($0^\circ$–$180^\circ$). Green ($40$–$80^\circ$) means unripe. Yellow ($18$–$34^\circ$) means ripe. Brown/Dark ($<20^\circ$) means rot or overripe.
+- **Hue (H — Color Tint)**: What color family is it? (0°–180°). Green (40°–80°) means unripe. Yellow (18°–34°) means ripe. Brown/Dark (below 20°) means rot or overripe.
 - **Saturation (S — Color Purity)**: How rich or intense is the color? High saturation means a bright yellow pod; low saturation means a dull white mold mat.
 - **Value (V — Brightness)**: How light or dark is the pixel? Fungal rot spots appear dark (low Value), while white mold spores appear bright (high Value).
 
@@ -68,11 +68,11 @@ $$
 \text{Var}(\Delta f) = \frac{1}{N}\sum (L(x, y) - \mu_L)^2
 $$
 
-- **Analogy**: Putting "reading glasses" on the computer. If a farmer takes a shaky, blurry photo, the computer measures the sharpness score. If the score is under $10.0$, the computer politely asks for a clearer photo instead of making a wrong guess.
+- **Analogy**: Putting "reading glasses" on the computer. If a farmer takes a shaky, blurry photo, the computer measures the sharpness score. If the score is under 10.0, the computer politely asks for a clearer photo instead of making a wrong guess.
 
 ### 2.6 Contour & Solidity Analysis (Pod Locator)
 - **What it means**: Outlining the border of objects in a picture to locate oval cocoa pods.
-- **Solidity ($S$)**: Measures how solid and rounded an object is compared to its boundary box:
+- **Solidity (S)**: Measures how solid and rounded an object is compared to its boundary box:
 
 $$
 S = \frac{\text{Area}_{\text{contour}}}{\text{Area}_{\text{convex\_hull}}}
@@ -97,9 +97,9 @@ Cocoa pods are smooth ovals (high solidity), while background branches are jagge
 
 CacaoLens AI was engineered using an end-to-end Python & Node.js architecture:
 
-1. **Computer Vision & Image Processing**: Built using **OpenCV (Open Source Computer Vision Library)** and **Pillow (PIL)** for image loading, resizing ($224 \times 224$), RGB-to-HSV color space conversion, and Laplacian blur filtering.
+1. **Computer Vision & Image Processing**: Built using **OpenCV (Open Source Computer Vision Library)** and **Pillow (PIL)** for image loading, resizing (224×224), RGB-to-HSV color space conversion, and Laplacian blur filtering.
 2. **Deep Learning Vision Engine**: Built using **PyTorch 2.x** and **Torchvision**, instantiating the pretrained `mobilenet_v3_small` architecture to extract 10-dimensional deep feature embeddings.
-3. **Machine Learning Voting Ensemble**: Built using **Scikit-Learn 1.3**, combining `ExtraTreesClassifier` ($120$ trees) and `RandomForestClassifier` ($120$ trees) using soft probability voting (`voting='soft'`).
+3. **Machine Learning Voting Ensemble**: Built using **Scikit-Learn 1.3**, combining `ExtraTreesClassifier` (120 trees) and `RandomForestClassifier` (120 trees) using soft probability voting (`voting='soft'`).
 4. **Python Web Microservice**: Built with **Flask** (`python_model/app.py`), exposing JSON prediction endpoints on `http://127.0.0.1:5000/predict`.
 5. **Production Web Backend**: Built with **Node.js 20** & **Express** (`server.ts`), acting as the reverse proxy, serving React frontend static assets, and managing API security.
 6. **Frontend User Interface**: Built with **React 18**, **TypeScript**, and **TailwindCSS**, rendering dynamic gauge charts, harvest countdowns, and risk checklists.
@@ -129,20 +129,20 @@ Real field dataset images were collected across open agricultural research mirro
 ### 5.2 Data Augmentation & Feature Synthesis
 To ensure balanced training across all 6 classes, the dataset was augmented with 1,500 feature vectors synthesized from real visual HSV profile distributions:
 
-- **Green Pericarp Range**: $H: 38$–$75^\circ,\ S: 120$–$220,\ V: 100$–$200$
-- **Golden Ripe Range**: $H: 18$–$34^\circ,\ S: 160$–$255,\ V: 180$–$255$
-- **Overripe Range**: $H: 8$–$22^\circ,\ S: 80$–$160,\ V: 50$–$110$
-- **Black Rot Range**: $H: 0$–$180^\circ,\ S: 20$–$100,\ V: 15$–$65$
-- **Frosty Rot Range**: $H: 0$–$180^\circ,\ S: 5$–$35,\ V: 190$–$255$
+- **Green Pericarp Range**: H: 38°–75°, S: 120–220, V: 100–200
+- **Golden Ripe Range**: H: 18°–34°, S: 160–255, V: 180–255
+- **Overripe Range**: H: 8°–22°, S: 80–160, V: 50–110
+- **Black Rot Range**: H: 0°–180°, S: 20–100, V: 15–65
+- **Frosty Rot Range**: H: 0°–180°, S: 5–35, V: 190–255
 
 ### 5.3 Optimization & Impurity Minimization
-During ensemble training, decision tree split nodes were optimized by minimizing **Gini Impurity** ($G$):
+During ensemble training, decision tree split nodes were optimized by minimizing **Gini Impurity** (G):
 
 $$
 G = 1 - \sum_{i=1}^{K} p_i^2
 $$
 
-where $p_i$ is the probability of a sample belonging to class $i$. Trees expand up to `max_depth=16` until node purity is achieved.
+where p_i is the probability of a sample belonging to class i. Trees expand up to `max_depth=16` until node purity is achieved.
 
 ---
 
@@ -200,8 +200,8 @@ where $p_i$ is the probability of a sample belonging to class $i$. Trees expand 
 ## 7. Pretrained MobileNetV3 "Computer Vision Brain"
 
 - **Architecture**: Inverted residual blocks with squeeze-and-excitation modules.
-- **Input Size**: $224 \times 224 \times 3$ RGB image tensor.
-- **Normalization**: ImageNet mean $[0.485, 0.456, 0.406]$ and std $[0.229, 0.224, 0.225]$.
+- **Input Size**: 224×224×3 RGB image tensor.
+- **Normalization**: ImageNet mean [0.485, 0.456, 0.406] and std [0.229, 0.224, 0.225].
 - **Embedding Output**: 10-dimensional spatial feature vector fed into the Voting Ensemble.
 
 ---
@@ -222,18 +222,18 @@ $$
 
 | Class | Ripeness Score | Harvest Window | Key Visual Traits | Recommended Farmer Action |
 | :--- | :---: | :---: | :--- | :--- |
-| `Unripe_Pod` | 35 / 100 | 4 – 6 Weeks | Deep green pericarp ($H: 35$–$75^\circ$) | Do not pick yet; allow cocoa fat content to build. |
-| `Ripe_Pod` | 95 / 100 | 0 – 1 Week | Golden yellow/orange ($H: 18$–$34^\circ$) | Harvest with sharp shears leaving 1cm stem attached. |
-| `Overripe_Pod` | 60 / 100 | Immediate Pick | Dull orange-brown ($V < 110$) | Pick today; discard germinated seeds during breaking. |
-| `Black_Pod_Rot` | 20 / 100 | Do Not Sell | Dark necrotic rot spot ($V < 65$) | Remove pod immediately; apply copper fungicide. |
+| `Unripe_Pod` | 35 / 100 | 4 – 6 Weeks | Deep green pericarp (H: 35°–75°) | Do not pick yet; allow cocoa fat content to build. |
+| `Ripe_Pod` | 95 / 100 | 0 – 1 Week | Golden yellow/orange (H: 18°–34°) | Harvest with sharp shears leaving 1cm stem attached. |
+| `Overripe_Pod` | 60 / 100 | Immediate Pick | Dull orange-brown (V below 110) | Pick today; discard germinated seeds during breaking. |
+| `Black_Pod_Rot` | 20 / 100 | Do Not Sell | Dark necrotic rot spot (V below 65) | Remove pod immediately; apply copper fungicide. |
 | `Frosty_Pod_Rot` | 15 / 100 | Quarantine | Dense white powdery mold mat | Sanitation pick; bury pod under 10cm soil. |
-| `Healthy_Leaf` | 92 / 100 | Active Canopy | Deep green lamina ($H: 40$–$80^\circ$) | Maintain soil N-P-K-Mg fertility schedule. |
+| `Healthy_Leaf` | 92 / 100 | Active Canopy | Deep green lamina (H: 40°–80°) | Maintain soil N-P-K-Mg fertility schedule. |
 
 ---
 
 ## 10. Model Evaluation & 95.03% Accuracy Exam Results
 
-Evaluated on an **80/20 Stratified Train/Test Split** ($1{,}204$ training samples, $302$ test samples):
+Evaluated on an **80/20 Stratified Train/Test Split** (1,204 training samples, 302 test samples):
 
 - **Overall Test Accuracy**: **95.03%**
 - **Weighted F1-Score**: **95.00%**
